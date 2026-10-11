@@ -1,0 +1,405 @@
+'==============================================================
+' Professor do Mapa  -  narrador guiado para MindManager
+'--------------------------------------------------------------
+' Percorre o mapa no de a no, le em voz alta o texto de cada no
+' (e, opcionalmente, as notas) e aplica um efeito de zoom a cada
+' mudanca de no: afasta ligeiramente, centra no no seguinte e
+' aproxima de forma progressiva.
+'
+' Pontos de entrada (aparecem na lista de macros do MindManager):
+'   ProfessorIniciar           - percorre o mapa todo
+'   ProfessorAPartirDaSelecao  - percorre so a ramificacao selecionada
+'   ProfessorApenasZoom        - mesmo percurso, sem voz
+'
+' Testado contra a API documentada do MindManager (Mindjet). O nome
+' da propriedade de zoom mudou entre versoes, por isso a macro
+' deteta automaticamente qual funciona (ver DetetarZoom).
+'==============================================================
+Option Explicit
+
+'-------------------- Configuracao ----------------------------
+Private Const ZOOM_FOCO          As Long = 130   ' % no no em foco
+Private Const ZOOM_PANORAMICO    As Long = 75    ' % entre nos
+Private Const PASSOS_ZOOM        As Long = 6     ' suavidade da animacao
+Private Const PAUSA_PASSO_MS     As Long = 45    ' ms por passo de zoom
+Private Const PAUSA_ENTRE_NOS_MS As Long = 350   ' ms depois de cada no
+Private Const LER_NOTAS          As Boolean = True
+Private Const ANUNCIAR_NIVEL     As Boolean = True ' "Nivel 2: ..."
+Private Const INCLUIR_FLUTUANTES As Boolean = True ' topicos soltos
+Private Const EXPANDIR_COLAPSADOS As Boolean = True
+Private Const VELOCIDADE_VOZ     As Long = 0     ' -10 (lento) a 10 (rapido)
+Private Const VOLUME_VOZ         As Long = 100   ' 0 a 100
+Private Const VOZ_PREFERIDA      As String = "portug" ' parte do nome da voz
+'--------------------------------------------------------------
+
+Private mVoz        As Object   ' SAPI.SpVoice
+Private mZoomObj    As Object   ' objeto que aceita a propriedade de zoom
+Private mZoomProp   As String   ' nome da propriedade de zoom encontrada
+Private mZoomInicial As Variant ' zoom original, para restaurar no fim
+
+'==============================================================
+' Pontos de entrada
+'==============================================================
+Sub ProfessorIniciar()
+    Executar False, False
+End Sub
+
+Sub ProfessorAPartirDaSelecao()
+    Executar True, False
+End Sub
+
+Sub ProfessorApenasZoom()
+    Executar False, True
+End Sub
+
+'==============================================================
+' Motor
+'==============================================================
+Private Sub Executar(ByVal soSelecao As Boolean, ByVal semVoz As Boolean)
+    Dim doc As Object, raizes As Collection, percurso As Collection
+    Dim i As Long, no As Object, nivel As Long
+
+    On Error GoTo Falhou
+
+    Set doc = Application.ActiveDocument
+    If doc Is Nothing Then
+        MsgBox "Abra um mapa antes de iniciar o professor.", vbExclamation
+        Exit Sub
+    End If
+
+    Set raizes = RecolherRaizes(doc, soSelecao)
+    If raizes.Count = 0 Then
+        MsgBox "Nao encontrei nos para percorrer.", vbExclamation
+        Exit Sub
+    End If
+
+    ' Lista plana do percurso: (topico, nivel)
+    Set percurso = New Collection
+    For i = 1 To raizes.Count
+        Percorrer raizes(i), 1, percurso
+    Next i
+
+    DetetarZoom doc
+    If Not semVoz Then IniciarVoz
+
+    For i = 1 To percurso.Count Step 2
+        Set no = percurso(i)
+        nivel = CLng(percurso(i + 1))
+
+        FocarNo doc, no                       ' seleciona + anima o zoom
+        If Not semVoz Then LerNo no, nivel     ' narra o no
+        Esperar PAUSA_ENTRE_NOS_MS
+    Next i
+
+    RestaurarZoom
+    If Not semVoz Then Falar "Fim do mapa."
+    Limpar
+    Exit Sub
+
+Falhou:
+    RestaurarZoom
+    Limpar
+    MsgBox "Professor do Mapa parou: " & Err.Description & _
+           " (erro " & Err.Number & ")", vbCritical
+End Sub
+
+' Raizes do percurso: topico central (+ flutuantes) ou a selecao atual.
+Private Function RecolherRaizes(ByVal doc As Object, ByVal soSelecao As Boolean) As Collection
+    Dim c As New Collection, sel As Object, t As Object, i As Long
+
+    If soSelecao Then
+        On Error Resume Next
+        Set sel = doc.Selection
+        On Error GoTo 0
+        If Not sel Is Nothing Then
+            For Each t In sel
+                If EhTopico(t) Then c.Add t
+            Next t
+        End If
+    End If
+
+    If c.Count = 0 Then
+        c.Add doc.CentralTopic
+        If INCLUIR_FLUTUANTES Then
+            On Error Resume Next
+            For i = 1 To doc.FloatingTopics.Count
+                c.Add doc.FloatingTopics(i)
+            Next i
+            Err.Clear
+            On Error GoTo 0
+        End If
+    End If
+
+    Set RecolherRaizes = c
+End Function
+
+' Profundidade primeiro, na ordem em que os nos aparecem no mapa.
+Private Sub Percorrer(ByVal no As Object, ByVal nivel As Long, ByVal destino As Collection)
+    Dim i As Long, subs As Object
+
+    destino.Add no
+    destino.Add nivel
+
+    If EXPANDIR_COLAPSADOS Then DefinirPropriedade no, "IsCollapsed", False
+
+    On Error Resume Next
+    Set subs = no.AllSubTopics
+    If subs Is Nothing Then Set subs = no.SubTopics
+    On Error GoTo 0
+    If subs Is Nothing Then Exit Sub
+
+    For i = 1 To subs.Count
+        Percorrer subs(i), nivel + 1, destino
+    Next i
+End Sub
+
+'==============================================================
+' Zoom e selecao
+'==============================================================
+' Seleciona o no e anima o zoom: panoramico -> foco.
+Private Sub FocarNo(ByVal doc As Object, ByVal no As Object)
+    Dim p As Long, pct As Long
+
+    AplicarZoom ZOOM_PANORAMICO
+    Esperar PAUSA_PASSO_MS * 2
+
+    Selecionar doc, no
+
+    For p = 1 To PASSOS_ZOOM
+        pct = ZOOM_PANORAMICO + _
+              CLng((ZOOM_FOCO - ZOOM_PANORAMICO) * p / PASSOS_ZOOM)
+        AplicarZoom pct
+        Esperar PAUSA_PASSO_MS
+    Next p
+
+    ' Garante que o no fica visivel depois de aproximar.
+    If Not ChamarMetodo(no, "BringIntoView") Then
+        ChamarMetodo no, "ScrollIntoView"
+    End If
+End Sub
+
+Private Sub Selecionar(ByVal doc As Object, ByVal no As Object)
+    On Error Resume Next
+    doc.Selection.Clear
+    Err.Clear
+    no.Select
+    If Err.Number <> 0 Then
+        Err.Clear
+        doc.Selection.Add no      ' variante de API mais antiga
+        Err.Clear
+    End If
+    On Error GoTo 0
+End Sub
+
+' O nome da propriedade de zoom e o objeto que a expoe variam entre
+' versoes; descobrimos uma vez e reutilizamos.
+Private Sub DetetarZoom(ByVal doc As Object)
+    Dim objs As New Collection, props As Variant
+    Dim i As Long, j As Long, candidato As Object
+
+    mZoomProp = ""
+    Set mZoomObj = Nothing
+
+    On Error Resume Next
+    objs.Add doc.ActiveWindow
+    objs.Add Application.ActiveWindow
+    objs.Add doc
+    Err.Clear
+    On Error GoTo 0
+
+    props = Array("Zoom", "ZoomPercentage", "ZoomLevel", "ZoomFactor")
+
+    For i = 1 To objs.Count
+        Set candidato = objs(i)
+        If Not candidato Is Nothing Then
+            For j = LBound(props) To UBound(props)
+                If LerPropriedade(candidato, CStr(props(j)), mZoomInicial) Then
+                    If DefinirPropriedade(candidato, CStr(props(j)), ZOOM_FOCO) Then
+                        Set mZoomObj = candidato
+                        mZoomProp = CStr(props(j))
+                        Exit Sub
+                    End If
+                End If
+            Next j
+        End If
+    Next i
+    ' Sem zoom disponivel: o percurso e a narracao continuam a funcionar.
+End Sub
+
+Private Sub AplicarZoom(ByVal pct As Long)
+    If mZoomObj Is Nothing Or Len(mZoomProp) = 0 Then Exit Sub
+    If pct < 10 Then pct = 10
+    If pct > 400 Then pct = 400
+    DefinirPropriedade mZoomObj, mZoomProp, pct
+End Sub
+
+Private Sub RestaurarZoom()
+    If mZoomObj Is Nothing Or Len(mZoomProp) = 0 Then Exit Sub
+    If IsEmpty(mZoomInicial) Then Exit Sub
+    DefinirPropriedade mZoomObj, mZoomProp, mZoomInicial
+End Sub
+
+'==============================================================
+' Voz (SAPI)
+'==============================================================
+Private Sub IniciarVoz()
+    Dim vozes As Object, i As Long, desc As String
+
+    On Error Resume Next
+    Set mVoz = CreateObject("SAPI.SpVoice")
+    On Error GoTo 0
+    If mVoz Is Nothing Then
+        MsgBox "Nao foi possivel iniciar a sintese de voz (SAPI)." & vbCrLf & _
+               "O percurso com zoom continua, mas sem narracao.", vbExclamation
+        Exit Sub
+    End If
+
+    On Error Resume Next
+    mVoz.Rate = VELOCIDADE_VOZ
+    mVoz.Volume = VOLUME_VOZ
+
+    Set vozes = mVoz.GetVoices
+    For i = 0 To vozes.Count - 1
+        desc = LCase$(vozes.Item(i).GetDescription)
+        If InStr(desc, LCase$(VOZ_PREFERIDA)) > 0 Then
+            Set mVoz.Voice = vozes.Item(i)
+            Exit For
+        End If
+    Next i
+    Err.Clear
+    On Error GoTo 0
+End Sub
+
+Private Sub LerNo(ByVal no As Object, ByVal nivel As Long)
+    Dim texto As String, notas As String, prefixo As String
+
+    texto = Limpo(TextoDe(no))
+    If ANUNCIAR_NIVEL Then
+        If nivel = 1 Then
+            prefixo = "Tema central: "
+        Else
+            prefixo = "Nivel " & nivel & ": "
+        End If
+    End If
+
+    If Len(texto) = 0 Then
+        Falar prefixo & "no sem texto."
+    Else
+        Falar prefixo & texto
+    End If
+
+    If LER_NOTAS Then
+        notas = Limpo(NotasDe(no))
+        If Len(notas) > 0 Then Falar "Nota: " & notas
+    End If
+End Sub
+
+' Fala em modo assincrono e espera, para a janela ir repintando.
+Private Sub Falar(ByVal texto As String)
+    If mVoz Is Nothing Then Exit Sub
+    If Len(Trim$(texto)) = 0 Then Exit Sub
+
+    On Error Resume Next
+    mVoz.Speak texto, 1              ' 1 = SVSFlagsAsync
+    If Err.Number <> 0 Then
+        Err.Clear
+        mVoz.Speak texto             ' sincrono, se o assincrono falhar
+        Err.Clear
+        On Error GoTo 0
+        Exit Sub
+    End If
+
+    Do While mVoz.Status.RunningState = 2   ' 2 = a falar
+        DoEvents
+        Esperar 40
+        If Err.Number <> 0 Then Exit Do
+    Loop
+    Err.Clear
+    On Error GoTo 0
+End Sub
+
+'==============================================================
+' Auxiliares
+'==============================================================
+Private Function TextoDe(ByVal no As Object) As String
+    Dim s As String
+    On Error Resume Next
+    s = no.Text
+    If Err.Number <> 0 Then Err.Clear: s = no.Title
+    Err.Clear
+    On Error GoTo 0
+    TextoDe = s
+End Function
+
+Private Function NotasDe(ByVal no As Object) As String
+    Dim s As String
+    On Error Resume Next
+    s = no.Notes.Text
+    If Err.Number <> 0 Then Err.Clear
+    On Error GoTo 0
+    NotasDe = s
+End Function
+
+Private Function EhTopico(ByVal o As Object) As Boolean
+    Dim s As String
+    On Error Resume Next
+    s = o.Text
+    EhTopico = (Err.Number = 0)
+    Err.Clear
+    On Error GoTo 0
+End Function
+
+Private Function LerPropriedade(ByVal obj As Object, ByVal prop As String, _
+                                ByRef valor As Variant) As Boolean
+    On Error Resume Next
+    valor = CallByName(obj, prop, VbGet)
+    LerPropriedade = (Err.Number = 0)
+    Err.Clear
+    On Error GoTo 0
+End Function
+
+Private Function DefinirPropriedade(ByVal obj As Object, ByVal prop As String, _
+                                    ByVal valor As Variant) As Boolean
+    On Error Resume Next
+    CallByName obj, prop, VbLet, valor
+    DefinirPropriedade = (Err.Number = 0)
+    Err.Clear
+    On Error GoTo 0
+End Function
+
+Private Function ChamarMetodo(ByVal obj As Object, ByVal metodo As String) As Boolean
+    On Error Resume Next
+    CallByName obj, metodo, VbMethod
+    ChamarMetodo = (Err.Number = 0)
+    Err.Clear
+    On Error GoTo 0
+End Function
+
+' Remove marcas de linha e espacos a mais antes de enviar para a voz.
+Private Function Limpo(ByVal s As String) As String
+    s = Replace(s, vbCrLf, " ")
+    s = Replace(s, vbCr, " ")
+    s = Replace(s, vbLf, " ")
+    s = Replace(s, vbTab, " ")
+    Do While InStr(s, "  ") > 0
+        s = Replace(s, "  ", " ")
+    Loop
+    Limpo = Trim$(s)
+End Function
+
+' Espera sem bloquear a interface (sem declaracoes de API do Windows).
+Private Sub Esperar(ByVal ms As Long)
+    Dim t As Double
+    If ms <= 0 Then Exit Sub
+    t = Timer
+    Do
+        DoEvents
+        If Timer < t Then Exit Do          ' passagem da meia-noite
+    Loop While (Timer - t) * 1000 < ms
+End Sub
+
+Private Sub Limpar()
+    Set mVoz = Nothing
+    Set mZoomObj = Nothing
+    mZoomProp = ""
+End Sub
