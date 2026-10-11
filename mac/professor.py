@@ -267,7 +267,8 @@ def apresentar(nos: list[No], mac: Mac, cfg: argparse.Namespace) -> None:
         print(
             "Modo apresentacao: ponha o MindManager no modo de apresentacao/"
             "walk-through\nantes de continuar — o zoom de cada no e feito pela "
-            "propria aplicacao."
+            "propria aplicacao.\nAviso: a versao 13 para Mac nao tem esse modo; "
+            "use --modo navegacao."
         )
 
     for indice, no in enumerate(nos):
@@ -288,7 +289,12 @@ def apresentar(nos: list[No], mac: Mac, cfg: argparse.Namespace) -> None:
             mac.atalho(cfg.tecla_zoom_in, cfg.pulso)
 
         mac.falar(frase(no, cfg.anunciar_nivel, cfg.notas), voz, cfg.velocidade)
-        if not mac.seco:
+        if cfg.manual and not mac.seco:
+            try:
+                input("    Enter para o no seguinte (Ctrl+C para parar) ")
+            except EOFError:
+                cfg.manual = False
+        elif not mac.seco:
             time.sleep(cfg.pausa)
 
     mac.falar("Fim do mapa.", voz, cfg.velocidade)
@@ -313,8 +319,9 @@ def main(argv: list[str] | None = None) -> int:
         "--modo",
         choices=("navegacao", "apresentacao", "listar"),
         default="navegacao",
-        help="navegacao: setas + zoom por atalho (predefinicao); "
-        "apresentacao: avanca o modo de apresentacao do MindManager; "
+        help="navegacao: setas + zoom por atalho (predefinicao, e o unico "
+        "que funciona no MindManager 13 para Mac); apresentacao: so avanca um "
+        "passo por no, para versoes com modo de apresentacao/walk-through; "
         "listar: so mostra o indice dos nos",
     )
     p.add_argument("--app", default="MindManager", help="nome da aplicacao no macOS")
@@ -353,6 +360,11 @@ def main(argv: list[str] | None = None) -> int:
         dest="anunciar_nivel",
         action="store_false",
         help='nao dizer "Nivel N:" antes do texto',
+    )
+    p.add_argument(
+        "--manual",
+        action="store_true",
+        help="esperar pelo Enter antes de passar ao no seguinte (modo aula)",
     )
     p.add_argument(
         "--seco", action="store_true", help="ensaio: mostra o plano sem tocar na app"

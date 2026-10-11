@@ -11,9 +11,22 @@ afasta, muda de nó e volta a aproximar, para o olho acompanhar onde está.
 
 ---
 
-## macOS (o seu caso)
+## macOS — MindManager 13.1 (o seu caso)
 
-A versão Mac do MindManager **não tem editor de macros**, por isso aqui o
+O que isto implica, confirmado antes de escrever o código:
+
+- a versão Mac **não tem editor de macros** (VBA é exclusivo do Windows);
+- a versão Mac **não tem modo de apresentação / *walk-through*** — está pedido
+  há anos no fórum oficial e o suporte confirma a ausência, sugerindo como
+  alternativa exportar para HTML5. Logo, no seu caso use `--modo navegacao`
+  (a predefinição), que é o modo em que o próprio script faz o zoom;
+- as **setas** movem a selecção para o tópico vizinho (acima, abaixo, à
+  esquerda, à direita) — é esse comportamento que o script usa para andar no
+  mapa;
+- o **zoom** no Mac é `Cmd` com `+` / `-`. Se na 13.1 a tecla for outra, muda-se
+  com `--tecla-zoom-in` / `--tecla-zoom-out`, sem tocar no código.
+
+A versão Mac do MindManager não tem editor de macros, por isso aqui o
 professor é um script Python que faz duas coisas:
 
 1. lê a estrutura do mapa directamente do ficheiro `.mmap` (texto, notas, níveis);
@@ -54,7 +67,7 @@ começar onde o script espera.
 | Modo | Quando usar |
 |---|---|
 | `--modo navegacao` (predefinição) | O script muda de nó com as setas e faz ele próprio o pulso de zoom |
-| `--modo apresentacao` | Se preferir o zoom da própria aplicação: ponha o MindManager em modo de apresentação/*walk-through* e o script só avança um passo por nó e narra |
+| `--modo apresentacao` | Só para versões com modo de apresentação/*walk-through* — **a 13.1 para Mac não tem**, fica aqui para o MindManager em Windows |
 | `--modo listar` | Só imprime o índice numerado dos nós |
 
 ### Opções
@@ -70,6 +83,7 @@ começar onde o script espera.
 | `--inicio 12` | `1` | Começar no nó número N (o número vem do `--modo listar`) |
 | `--sem-notas` | — | Não ler as notas |
 | `--sem-nivel` | — | Não dizer "Nível N:" antes do texto |
+| `--manual` | — | Esperar pelo `Enter` antes de passar ao nó seguinte (modo aula) |
 | `--app "MindManager"` | `MindManager` | Nome da aplicação, se o seu for diferente |
 | `--seco` | — | Ensaio: imprime o plano sem tocar na aplicação |
 
@@ -77,16 +91,17 @@ Para parar a meio: `Ctrl+C` no Terminal.
 
 ### Se o zoom ou a navegação não responderem
 
-Os atalhos variam entre versões do MindManager para Mac. Para ver os comandos
-e atalhos reais da sua versão:
+Corra o diagnóstico — junta num só relatório a versão instalada, se a aplicação
+traz dicionário AppleScript (o que permitiria controlo directo, em vez de
+teclas), os menus com os atalhos reais e as vozes instaladas:
 
 ```bash
-osascript mac/inspecionar.applescript
+bash mac/verificar.sh > diagnostico.txt
 ```
 
-O resultado lista cada menu com o atalho de teclado entre parênteses. Com isso:
-ajuste `--tecla-zoom-in` / `--tecla-zoom-out`, ou envie-me a lista e eu afino o
-script.
+Com esse relatório: ajuste `--tecla-zoom-in` / `--tecla-zoom-out` para os
+atalhos que lá aparecem — ou envie-me o `diagnostico.txt` e eu afino o script à
+sua 13.1 (incluindo passar a usar AppleScript directo, se a versão o expuser).
 
 ---
 
@@ -110,6 +125,20 @@ configuração está nas constantes no topo do ficheiro.
   sem a aplicação). O que depende da aplicação — atalhos de zoom, navegação por
   setas, nome do processo — pode precisar de afinação na sua versão; use
   `--seco` e `mac/inspecionar.applescript` para isso.
+- Sobre a 13.1: a ausência de modo de apresentação na versão Mac e o
+  comportamento das setas foram confirmados em fontes públicas (ver abaixo); os
+  atalhos de zoom não têm referência oficial para Mac, daí serem configuráveis
+  e haver o `mac/verificar.sh`.
 - Nota conhecida: a navegação por setas assume ramos do lado direito do mapa.
   Em nós colocados à esquerda do tema central, o MindManager troca o sentido de
   `←`/`→`; se tiver o mapa com ramos para os dois lados, diga-me e trato o caso.
+
+---
+
+## Fontes consultadas
+
+- [Reinsert "presentation mode" option in version for Mac](https://community.mindmanager.com/topic/1262-reinsert-presentation-mode-option-in-version-for-mac) — ausência do modo de apresentação na versão Mac
+- [Presentation — Walk Through](https://community.mindmanager.com/comments/1427/vote/toggle) e [When will the presentation mode be available on MindManager for Mac?](https://community.mindmanager.com/comments/4581/vote/toggle)
+- [Lista de atalhos do MindManager](https://blog.mindmanager.com/?p=2511) — setas para mover a selecção entre tópicos
+- [How to zoom in and out of maps in MindManager](https://www.cyberly.org/en/how-do-i-zoom-in-and-out-of-maps-in-mindmanager/index.html) — zoom no Mac com `Cmd` e `+`/`-`
+- [Does MindManager offer keyboard navigation?](https://www.cyberly.org/en/does-mindmanager-offer-keyboard-navigation/index.html) — diferenças de teclas entre Windows e Mac

@@ -6,7 +6,12 @@
 -- Precisa de autorizacao em Definicoes do Sistema > Privacidade e Seguranca >
 -- Acessibilidade para o Terminal (ou para o Script Editor).
 
-set nomeApp to "MindManager"
+on run argumentos
+	if (count of argumentos) > 0 then
+		set nomeApp to item 1 of argumentos
+	else
+		set nomeApp to "MindManager"
+	end if
 set relatorio to ""
 
 tell application nomeApp to activate
@@ -37,3 +42,4 @@ tell application "System Events"
 end tell
 
 return relatorio
+end run
