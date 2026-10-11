@@ -1,84 +1,115 @@
 # Professor do Mapa — narrador guiado para MindManager
 
-Macro para o MindManager que põe um "professor" a percorrer o mapa mental nó a nó:
-lê em voz alta o texto de cada nó (e as notas, se existirem) e **aplica um zoom a
-cada mudança de nó** — afasta ligeiramente, centra no nó seguinte e aproxima de
-forma progressiva, para o olho acompanhar onde está.
+Põe um "professor" a percorrer o mapa mental nó a nó: lê em voz alta o texto de
+cada nó (e as notas, se existirem) e **aplica um zoom a cada mudança de nó** —
+afasta, muda de nó e volta a aproximar, para o olho acompanhar onde está.
 
-Ficheiro: [`macros/ProfessorMapa.mmbas`](macros/ProfessorMapa.mmbas)
-
-## Instalar
-
-1. No MindManager, abrir o separador **Ferramentas / Tools** → **Macros** →
-   **Editor de Macros** (*Macro Editor*).
-2. No editor, **Ficheiro → Abrir** e escolher `macros/ProfessorMapa.mmbas`
-   (ou criar uma macro nova e colar todo o conteúdo do ficheiro).
-3. Gravar. A macro passa a aparecer na lista de macros do MindManager.
-
-> O editor de macros existe nas edições Windows do MindManager. Na versão para
-> macOS não há motor de macros, por isso esta solução não se aplica aí.
-
-## Usar
-
-Com um mapa aberto, correr uma destas macros:
-
-| Macro | O que faz |
-|---|---|
-| `ProfessorIniciar` | Percorre e narra o mapa todo, a partir do tema central |
-| `ProfessorAPartirDaSelecao` | Percorre apenas a ramificação do(s) nó(s) selecionado(s) |
-| `ProfessorApenasZoom` | O mesmo percurso com zoom, mas sem voz |
-
-O percurso é em profundidade, pela mesma ordem em que os nós aparecem no mapa.
-Nós fechados são abertos durante a apresentação (configurável).
-
-## Configurar
-
-As constantes no topo do ficheiro controlam o comportamento:
-
-| Constante | Predefinição | Efeito |
+| Plataforma | Ficheiro | Como funciona |
 |---|---|---|
-| `ZOOM_FOCO` | `130` | Percentagem de zoom no nó em foco |
-| `ZOOM_PANORAMICO` | `75` | Zoom intermédio, entre nós (dá a sensação de "afastar e voltar a aproximar") |
-| `PASSOS_ZOOM` | `6` | Nº de passos da animação de zoom (mais passos = mais suave) |
-| `PAUSA_PASSO_MS` | `45` | Duração de cada passo de zoom, em milissegundos |
-| `PAUSA_ENTRE_NOS_MS` | `350` | Pausa depois de cada nó |
-| `LER_NOTAS` | `True` | Ler também as notas do nó |
-| `ANUNCIAR_NIVEL` | `True` | Dizer "Tema central:" / "Nível 2:" antes do texto |
-| `INCLUIR_FLUTUANTES` | `True` | Incluir tópicos soltos (não ligados ao centro) |
-| `EXPANDIR_COLAPSADOS` | `True` | Abrir os nós fechados ao passar por eles |
-| `VELOCIDADE_VOZ` | `0` | Velocidade da fala, de `-10` (lento) a `10` (rápido) |
-| `VOLUME_VOZ` | `100` | Volume, de `0` a `100` |
-| `VOZ_PREFERIDA` | `"portug"` | Parte do nome da voz a usar (ex.: `"portug"`, `"Helia"`, `"Maria"`) |
+| **macOS** | [`mac/professor.py`](mac/professor.py) | Lê o `.mmap`, narra com o `say` e conduz o MindManager por teclado |
+| Windows | [`windows/ProfessorMapa.mmbas`](windows/ProfessorMapa.mmbas) | Macro VBA dentro do MindManager (voz SAPI, zoom pela API) |
 
-## Como funciona
+---
 
-- **Voz** — usa o SAPI do Windows (`SAPI.SpVoice`). Procura uma voz cujo nome
-  contenha `VOZ_PREFERIDA`; se não encontrar, usa a voz predefinida do sistema.
-  A fala é assíncrona com espera, para a janela do mapa continuar a repintar.
-- **Zoom** — o nome da propriedade de zoom mudou entre versões do MindManager
-  (`Zoom`, `ZoomPercentage`, `ZoomLevel`, `ZoomFactor`) e pode estar na janela do
-  documento ou na aplicação. A macro testa essas combinações no arranque e usa a
-  primeira que responda; o valor de zoom original é restaurado no fim. Se nenhuma
-  funcionar na sua versão, o percurso e a narração continuam a funcionar — apenas
-  sem o efeito de zoom.
-- **Seleção** — cada nó é selecionado antes de ser lido (é isso que o faz entrar
-  na vista), com `BringIntoView`/`ScrollIntoView` depois de aproximar.
-- As esperas usam `Timer` + `DoEvents`, sem declarações de API do Windows, para
-  evitar problemas entre MindManager de 32 e 64 bits.
+## macOS (o seu caso)
 
-## Resolução de problemas
+A versão Mac do MindManager **não tem editor de macros**, por isso aqui o
+professor é um script Python que faz duas coisas:
 
-- **Não ouço nada** — verifique se tem vozes instaladas em *Definições do Windows →
-  Hora e idioma → Voz*. Para português, instale o pacote de voz pt-PT ou pt-BR;
-  caso contrário ajuste `VOZ_PREFERIDA` para uma voz existente.
-- **O zoom não muda** — a sua versão expõe outro nome de propriedade. Acrescente-o
-  à lista `props` em `DetetarZoom`.
-- **Quero parar a meio** — feche a janela da macro/pare a execução no editor de
-  macros; o zoom original é restaurado quando a macro termina normalmente.
+1. lê a estrutura do mapa directamente do ficheiro `.mmap` (texto, notas, níveis);
+2. narra cada nó com a voz do macOS e conduz a janela do MindManager por
+   teclado — setas para mudar de nó e `Cmd+-` / `Cmd+=` para o pulso de zoom.
 
-## Nota
+### Preparar (uma vez)
 
-Esta macro foi escrita contra a API de automação do MindManager (Windows) e
-**não pôde ser executada neste ambiente** (Linux, sem MindManager instalado). Os
-pontos onde a API varia entre versões são detetados em tempo de execução e falham
-de forma suave, mas vale a pena uma primeira passagem num mapa pequeno.
+1. Autorizar o controlo por teclado: **Definições do Sistema → Privacidade e
+   Segurança → Acessibilidade** → ligar o **Terminal** (é o Terminal que envia
+   as teclas, não o Python).
+2. Instalar uma voz portuguesa, se ainda não tiver: **Definições do Sistema →
+   Acessibilidade → Conteúdo falado → Voz do sistema → Gerir vozes**
+   (ex.: *Joana* pt-PT, *Luciana* pt-BR). Para ver as que já tem:
+   `python3 mac/professor.py x --voz ?`
+
+### Correr
+
+```bash
+# 1) ver primeiro o índice que vai ser lido (não toca na aplicação)
+python3 mac/professor.py ~/Documentos/mapa.mmap --modo listar
+
+# 2) ensaio: mostra todas as teclas e falas planeadas, sem mexer no MindManager
+python3 mac/professor.py ~/Documentos/mapa.mmap --seco
+
+# 3) a sério: abra o mapa no MindManager e corra
+python3 mac/professor.py ~/Documentos/mapa.mmap
+```
+
+O script activa o MindManager, selecciona o tema central e avança nó a nó em
+profundidade (tema central → ramo a ramo), com a mesma ordem do mapa.
+
+**Antes do passo 3:** clique uma vez no tema central do mapa, para a selecção
+começar onde o script espera.
+
+### Modos
+
+| Modo | Quando usar |
+|---|---|
+| `--modo navegacao` (predefinição) | O script muda de nó com as setas e faz ele próprio o pulso de zoom |
+| `--modo apresentacao` | Se preferir o zoom da própria aplicação: ponha o MindManager em modo de apresentação/*walk-through* e o script só avança um passo por nó e narra |
+| `--modo listar` | Só imprime o índice numerado dos nós |
+
+### Opções
+
+| Opção | Predefinição | Efeito |
+|---|---|---|
+| `--voz Joana` | voz portuguesa, se existir | Voz do `say`; `--voz ?` lista as instaladas |
+| `--velocidade 180` | `180` | Palavras por minuto |
+| `--pulso 2` | `2` | Passos de zoom a afastar e a aproximar em cada mudança de nó (simétrico, por isso o zoom não "foge") |
+| `--zoom-inicial 2` | `2` | Aproximação aplicada no início e desfeita no fim |
+| `--tecla-zoom-in` / `--tecla-zoom-out` | `=` / `-` | Teclas dos atalhos `Cmd+…` de zoom, se na sua versão forem outras |
+| `--pausa 0.4` | `0.4 s` | Pausa depois de cada nó |
+| `--inicio 12` | `1` | Começar no nó número N (o número vem do `--modo listar`) |
+| `--sem-notas` | — | Não ler as notas |
+| `--sem-nivel` | — | Não dizer "Nível N:" antes do texto |
+| `--app "MindManager"` | `MindManager` | Nome da aplicação, se o seu for diferente |
+| `--seco` | — | Ensaio: imprime o plano sem tocar na aplicação |
+
+Para parar a meio: `Ctrl+C` no Terminal.
+
+### Se o zoom ou a navegação não responderem
+
+Os atalhos variam entre versões do MindManager para Mac. Para ver os comandos
+e atalhos reais da sua versão:
+
+```bash
+osascript mac/inspecionar.applescript
+```
+
+O resultado lista cada menu com o atalho de teclado entre parênteses. Com isso:
+ajuste `--tecla-zoom-in` / `--tecla-zoom-out`, ou envie-me a lista e eu afino o
+script.
+
+---
+
+## Windows
+
+Para quem usar o MindManager em Windows, a macro `windows/ProfessorMapa.mmbas`
+faz o mesmo dentro da aplicação (sem Python): instalar em **Ferramentas →
+Macros → Editor de Macros**, abrir o ficheiro e gravar. Fica com três macros:
+`ProfessorIniciar`, `ProfessorAPartirDaSelecao` e `ProfessorApenasZoom`. A
+configuração está nas constantes no topo do ficheiro.
+
+---
+
+## O que foi verificado
+
+- A leitura do `.mmap` (ZIP com `Document.xml`), a ordem do percurso e as notas
+  foram testadas contra um mapa de exemplo gerado para o efeito.
+- O cálculo das teclas entre nós consecutivos foi validado por simulação em 300
+  árvores aleatórias (~26 500 nós), incluindo o mapa de exemplo.
+- **Não foi possível testar contra o MindManager real** (este ambiente é Linux,
+  sem a aplicação). O que depende da aplicação — atalhos de zoom, navegação por
+  setas, nome do processo — pode precisar de afinação na sua versão; use
+  `--seco` e `mac/inspecionar.applescript` para isso.
+- Nota conhecida: a navegação por setas assume ramos do lado direito do mapa.
+  Em nós colocados à esquerda do tema central, o MindManager troca o sentido de
+  `←`/`→`; se tiver o mapa com ramos para os dois lados, diga-me e trato o caso.
