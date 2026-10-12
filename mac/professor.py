@@ -534,6 +534,28 @@ def vozes_disponiveis() -> list[tuple[str, str]]:
     return vozes
 
 
+# Marcas de qualidade no nome da voz; as Premium/Melhoradas soam muito melhor
+# do que as compactas antigas.
+MARCAS_QUALIDADE = ("premium", "enhanced", "melhorada", "aprimorada", "siri")
+
+# Vozes dedicadas ao portugues, por ordem de preferencia entre iguais.
+VOZES_CONHECIDAS = ("Luciana", "Felipe", "Joana", "Catarina")
+
+
+def _qualidade(nome: str) -> tuple:
+    """Chave de ordenacao: Premium primeiro, depois dedicadas, depois conhecidas."""
+    n = nome.lower()
+    premium = any(marca in n for marca in MARCAS_QUALIDADE)
+    # As multilingues trazem o idioma entre parenteses, ex. "Eddy (Portugues ...)".
+    multilingue = "(" in nome and not premium
+    base = nome.split(" (")[0]
+    conhecida = base in VOZES_CONHECIDAS
+    ordem_conhecida = (
+        VOZES_CONHECIDAS.index(base) if conhecida else len(VOZES_CONHECIDAS)
+    )
+    return (not premium, multilingue, ordem_conhecida, nome)
+
+
 def escolher_voz(pedida: str | None, idioma: str = "pt_BR") -> str | None:
     """Voz a usar: a pedida, ou a melhor voz da regiao indicada."""
     vozes = vozes_disponiveis()
@@ -542,30 +564,29 @@ def escolher_voz(pedida: str | None, idioma: str = "pt_BR") -> str | None:
     if pedida:
         if nomes and pedida not in nomes:
             parecidas = [n for n in nomes if pedida.lower() in n.lower()]
-            if len(parecidas) == 1:
-                return parecidas[0]
-            aviso = f'Aviso: a voz "{pedida}" nao esta instalada'
-            if parecidas:
-                aviso += f". Parecidas: {', '.join(parecidas[:4])}"
-            print(aviso + "; uso a voz predefinida do sistema.")
+            if len(parecidas) >= 1:
+                # Com varias, fica a de melhor qualidade: "Luciana" com a
+                # Premium instalada deve dar "Luciana (Premium)".
+                escolhida = sorted(parecidas, key=_qualidade)[0]
+                if len(parecidas) > 1:
+                    print(f'Voz "{pedida}": uso "{escolhida}".')
+                return escolhida
+            print(
+                f'Aviso: a voz "{pedida}" nao esta instalada; uso a voz '
+                "predefinida do sistema."
+            )
             return None
         return pedida
 
     idioma = idioma.replace("-", "_")
     da_regiao = [n for n, reg in vozes if reg == idioma]
-    # As vozes dedicadas a uma regiao soam melhor do que as multilingues, cujo
-    # nome traz o idioma entre parenteses.
-    dedicadas = [n for n in da_regiao if "(" not in n]
-    for preferida in ("Luciana", "Felipe", "Joana", "Catarina"):
-        if preferida in dedicadas:
-            return preferida
-    if dedicadas:
-        return dedicadas[0]
     if da_regiao:
-        return da_regiao[0]
+        return sorted(da_regiao, key=_qualidade)[0]
 
     base = idioma.split("_")[0]
-    mesma_lingua = [n for n, reg in vozes if reg.startswith(base + "_")]
+    mesma_lingua = sorted(
+        [n for n, reg in vozes if reg.startswith(base + "_")], key=_qualidade
+    )
     if mesma_lingua:
         print(
             f'Aviso: nao ha vozes {idioma} instaladas; uso "{mesma_lingua[0]}".\n'
@@ -574,6 +595,7 @@ def escolher_voz(pedida: str | None, idioma: str = "pt_BR") -> str | None:
         )
         return mesma_lingua[0]
     return None
+
 
 # --------------------------------------------------------------------------
 # Apresentacao
@@ -594,13 +616,16 @@ def amostrar_vozes(idioma: str, velocidade: int) -> int:
         "Este e o professor do mapa. Conceito: o ato administrativo "
         "e manifestacao unilateral de vontade."
     )
-    print(f"{len(vozes)} vozes {idioma}. Ouca e escolha com --voz:\n")
-    for nome, _ in vozes:
-        print(f'  --voz "{nome}"')
+    escolhida = escolher_voz(None, idioma)
+    ordenadas = sorted((n for n, _ in vozes), key=_qualidade)
+    print(f"{len(ordenadas)} vozes {idioma}, da melhor para a pior:\n")
+    for nome in ordenadas:
+        marca = "   <-- usada por omissao" if nome == escolhida else ""
+        print(f'  --voz "{nome}"{marca}')
         subprocess.run(
             ["say", "-v", nome, "-r", str(velocidade), "--", f"{nome}. {exemplo}"],
             check=False,
-        )
+        )  # noqa: E501
     print(
         "\nSe todas soarem roboticas, instale uma voz Melhorada/Premium em\n"
         "Definicoes do Sistema > Acessibilidade > Conteudo falado > Voz do\n"
@@ -674,6 +699,7 @@ def apresentar_applescript(
     nos: list[No], motor: MotorAppleScript, cfg: argparse.Namespace
 ) -> None:
     voz = escolher_voz(cfg.voz, cfg.idioma)
+    print(f"Voz: {voz or 'predefinida do sistema'}   ({len(nos)} nos)")
     motor.realce_activo = cfg.realce
     motor.cor_realce = cor_applescript(cfg.cor_realce)
     motor.preparar()

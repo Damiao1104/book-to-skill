@@ -15,6 +15,7 @@ import zipfile
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(RAIZ, "mac"))
 
+import professor  # noqa: E402
 from professor import (  # noqa: E402
     KEY_DOWN,
     KEY_LEFT,
@@ -22,6 +23,7 @@ from professor import (  # noqa: E402
     No,
     cor_applescript,
     em_profundidade,
+    escolher_voz,
     ler_mapa,
     suavizar_maiusculas,
     teclas_entre,
@@ -156,6 +158,48 @@ def testar_cores() -> None:
     verificar(cor_applescript("99999,0,0") == "{65535, 0, 0}", "acima do maximo cortado")
 
 
+def testar_escolha_de_voz() -> None:
+    print("escolha da voz:")
+    original = professor.vozes_disponiveis
+    try:
+        completa = [
+            ("Alex", "en_US"),
+            ("Luciana", "pt_BR"),
+            ("Luciana (Premium)", "pt_BR"),
+            ("Eddy (Português (Brasil))", "pt_BR"),
+            ("Joana", "pt_PT"),
+            ("Joana (Melhorada)", "pt_PT"),
+        ]
+        professor.vozes_disponiveis = lambda: completa
+        verificar(
+            escolher_voz(None, "pt_BR") == "Luciana (Premium)",
+            "com Premium instalada, e a Premium que ganha",
+        )
+        verificar(
+            escolher_voz(None, "pt_PT") == "Joana (Melhorada)",
+            "o mesmo em pt_PT com a Melhorada",
+        )
+        verificar(escolher_voz("Luciana", "pt_BR") == "Luciana",
+                  "um pedido exacto e respeitado")
+        verificar(
+            escolher_voz("sandy", "pt_BR") is None
+            or "Sandy" in (escolher_voz("sandy", "pt_BR") or ""),
+            "nome parcial inexistente nao rebenta",
+        )
+
+        sem_premium = [("Luciana", "pt_BR"), ("Eddy (Português (Brasil))", "pt_BR")]
+        professor.vozes_disponiveis = lambda: sem_premium
+        verificar(
+            escolher_voz(None, "pt_BR") == "Luciana",
+            "sem Premium, a dedicada ganha a multilingue",
+        )
+
+        professor.vozes_disponiveis = lambda: [("Alex", "en_US")]
+        verificar(escolher_voz(None, "pt_BR") is None, "sem vozes portuguesas")
+    finally:
+        professor.vozes_disponiveis = original
+
+
 def main() -> int:
     import tempfile
 
@@ -164,6 +208,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as tmp:
         testar_leitura_mmap(tmp)
     testar_cores()
+    testar_escolha_de_voz()
 
     print()
     if falhas:

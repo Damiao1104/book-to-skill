@@ -82,11 +82,13 @@ python3 mac/professor.py --amostra          # diz uma frase com cada voz pt_BR
 python3 mac/professor.py --voz "Luciana"
 ```
 
-As vozes antigas (Luciana, Joana) soam robóticas. Para uma voz muito melhor,
-instale a versão **Melhorada** ou **Premium** em *Definições do Sistema →
-Acessibilidade → Conteúdo falado → Voz do sistema → Gerir vozes*, escolhendo
-Português (Brasil); depois volte a correr `--amostra`. Também ajuda baixar o
-ritmo: `--velocidade 160`.
+As vozes compactas antigas (Luciana, Joana) soam robóticas. Instale a versão
+**Melhorada** ou **Premium** em *Definições do Sistema → Acessibilidade →
+Conteúdo falado → Voz do sistema → Gerir vozes*, escolhendo Português (Brasil).
+A escolha automática **prefere as Premium/Melhoradas** quando estão instaladas
+(aparecem no `say` como `Luciana (Premium)`), depois as dedicadas ao português e
+só então as multilingues. O nome da voz em uso é impresso no início de cada
+sessão. Baixar o ritmo também ajuda: `--velocidade 160`.
 
 ### Realce do nó em foco
 
