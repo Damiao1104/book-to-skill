@@ -157,7 +157,8 @@ começar onde o script espera.
 | `--documento 1` | `1` | Qual dos mapas abertos usar |
 | `--sem-realce` | — | Não pintar o nó em foco (não toca no documento) |
 | `--cor-realce 255,220,130` | âmbar claro | Cor do realce, em `R,G,B` (0–255 ou 0–65535) |
-| `--voz Joana` | voz portuguesa, se existir | Voz do `say`; `--voz ?` lista as instaladas |
+| `--voz Luciana` | melhor voz `pt_BR` | Voz do `say`; `--voz ?` lista as instaladas e marca a escolhida |
+| `--idioma pt_BR` | `pt_BR` | Região da voz. Use `pt_PT` para português de Portugal |
 | `--velocidade 180` | `180` | Palavras por minuto |
 | `--pulso 2` | `2` | Passos de zoom a afastar e a aproximar em cada mudança de nó (simétrico, por isso o zoom não "foge") |
 | `--zoom-inicial 2` | `2` | Aproximação aplicada no início e desfeita no fim |

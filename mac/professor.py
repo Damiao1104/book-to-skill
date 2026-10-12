@@ -313,6 +313,8 @@ class MotorAppleScript:
         self.realcado: tuple[str, str] | None = None
         self.cor_realce = "{65535, 58000, 35000}"
         self.realce_activo = True
+        # Avisos ja mostrados, para nao repetir o mesmo em cada no.
+        self.avisos: set[str] = set()
 
     # -- infra-estrutura -------------------------------------------------
     def _osascript(self, *args: str) -> str:
@@ -399,7 +401,16 @@ class MotorAppleScript:
             )
 
         linhas.append(f"zoom document {self.documento} to {panoramico}")
-        linhas.append(f"try\nset collapsed of {ref} to false\nend try")
+        # Expandir o no e preciso para os filhos ficarem visiveis; se a
+        # aplicacao recusar, guardamos o motivo em vez de o engolir.
+        linhas.append(
+            'set aviso to ""\n'
+            "try\n"
+            f"set collapsed of {ref} to false\n"
+            "on error e\n"
+            "set aviso to e\n"
+            "end try"
+        )
         # A classe `topic` nao responde a `select` (confirmado na 13.1): e o
         # `reveal` que traz o no para a vista.
         linhas.append(f"reveal {ref}")
@@ -425,11 +436,17 @@ class MotorAppleScript:
             if p < passos:
                 linhas.append(f"delay {pausa:.2f}")
 
-        if self.realce_activo:
-            linhas.append("return anterior")
+        if not self.realce_activo:
+            linhas.append('set anterior to ""')
+        linhas.append(f'return anterior & "{US}" & aviso')
 
-        saida = self._tell("\n".join(linhas)).strip()
-        self.realcado = (ref, saida) if (self.realce_activo and saida) else None
+        bruto = self._tell("\n".join(linhas))
+        cor, _, aviso = bruto.partition(US)
+        cor, aviso = cor.strip(), aviso.strip()
+        self.realcado = (ref, cor) if (self.realce_activo and cor) else None
+        if aviso and aviso not in self.avisos:
+            self.avisos.add(aviso)
+            print(f"    aviso: nao consegui expandir o no — {aviso}")
 
     def restaurar(self) -> None:
         """Repoe a cor do ultimo no realcado e o zoom inicial do documento."""
@@ -447,31 +464,64 @@ class MotorAppleScript:
         falar_com_say(texto, voz, velocidade, seco=self.seco)
 
 
-def vozes_disponiveis() -> list[str]:
+def vozes_disponiveis() -> list[tuple[str, str]]:
+    """Vozes do `say` como (nome, regiao), ex.: ("Luciana", "pt_BR").
+
+    Os nomes podem ter espacos e parenteses — nas versoes recentes do macOS a
+    mesma voz aparece por idioma, como "Eddy (Portugues (Brasil))" — por isso
+    separa-se o nome da regiao pelo codigo de regiao que precede o comentario.
+    """
     if not shutil.which("say"):
         return []
     proc = subprocess.run(["say", "-v", "?"], capture_output=True, text=True)
-    return [
-        linha.split()[0] for linha in proc.stdout.splitlines() if linha.strip()
-    ]
+    vozes: list[tuple[str, str]] = []
+    for linha in proc.stdout.splitlines():
+        achado = re.match(r"^(.*?)\s+([a-z]{2}[-_][A-Z]{2})\s+#", linha)
+        if achado:
+            vozes.append((achado.group(1).strip(), achado.group(2).replace("-", "_")))
+    return vozes
 
 
-def escolher_voz(pedida: str | None) -> str | None:
+def escolher_voz(pedida: str | None, idioma: str = "pt_BR") -> str | None:
+    """Voz a usar: a pedida, ou a melhor voz da regiao indicada."""
     vozes = vozes_disponiveis()
+    nomes = [n for n, _ in vozes]
+
     if pedida:
-        if vozes and pedida not in vozes:
-            print(
-                f'Aviso: a voz "{pedida}" nao esta instalada; uso a voz '
-                "predefinida do sistema."
-            )
+        if nomes and pedida not in nomes:
+            parecidas = [n for n in nomes if pedida.lower() in n.lower()]
+            if len(parecidas) == 1:
+                return parecidas[0]
+            aviso = f'Aviso: a voz "{pedida}" nao esta instalada'
+            if parecidas:
+                aviso += f". Parecidas: {', '.join(parecidas[:4])}"
+            print(aviso + "; uso a voz predefinida do sistema.")
             return None
         return pedida
-    # Vozes portuguesas habituais no macOS.
-    for preferida in ("Joana", "Catarina", "Luciana", "Felipe"):
-        if preferida in vozes:
-            return preferida
-    return None
 
+    idioma = idioma.replace("-", "_")
+    da_regiao = [n for n, reg in vozes if reg == idioma]
+    # As vozes dedicadas a uma regiao soam melhor do que as multilingues, cujo
+    # nome traz o idioma entre parenteses.
+    dedicadas = [n for n in da_regiao if "(" not in n]
+    for preferida in ("Luciana", "Felipe", "Joana", "Catarina"):
+        if preferida in dedicadas:
+            return preferida
+    if dedicadas:
+        return dedicadas[0]
+    if da_regiao:
+        return da_regiao[0]
+
+    base = idioma.split("_")[0]
+    mesma_lingua = [n for n, reg in vozes if reg.startswith(base + "_")]
+    if mesma_lingua:
+        print(
+            f'Aviso: nao ha vozes {idioma} instaladas; uso "{mesma_lingua[0]}".\n'
+            "Para instalar: Definicoes do Sistema > Acessibilidade > "
+            "Conteudo falado > Voz do sistema > Gerir vozes."
+        )
+        return mesma_lingua[0]
+    return None
 
 # --------------------------------------------------------------------------
 # Apresentacao
@@ -488,7 +538,7 @@ def frase(no: No, anunciar_nivel: bool, ler_notas: bool) -> str:
 
 
 def apresentar(nos: list[No], mac: Mac, cfg: argparse.Namespace) -> None:
-    voz = escolher_voz(cfg.voz)
+    voz = escolher_voz(cfg.voz, cfg.idioma)
     mac.activar()
 
     if cfg.modo == "apresentacao":
@@ -533,7 +583,7 @@ def apresentar(nos: list[No], mac: Mac, cfg: argparse.Namespace) -> None:
 def apresentar_applescript(
     nos: list[No], motor: MotorAppleScript, cfg: argparse.Namespace
 ) -> None:
-    voz = escolher_voz(cfg.voz)
+    voz = escolher_voz(cfg.voz, cfg.idioma)
     motor.realce_activo = cfg.realce
     motor.cor_realce = cor_applescript(cfg.cor_realce)
     motor.preparar()
@@ -629,7 +679,14 @@ def main(argv: list[str] | None = None) -> int:
         "listar: so mostra o indice dos nos",
     )
     p.add_argument("--app", default="MindManager", help="nome da aplicacao no macOS")
-    p.add_argument("--voz", help='voz do say (ex.: Joana); "--voz ?" lista as vozes')
+    p.add_argument(
+        "--voz", help='voz do say (ex.: Luciana); "--voz ?" lista as vozes'
+    )
+    p.add_argument(
+        "--idioma",
+        default="pt_BR",
+        help="regiao da voz quando nao se indica --voz (predefinicao: pt_BR)",
+    )
     p.add_argument("--velocidade", type=int, default=180, help="palavras por minuto")
     p.add_argument("--pausa", type=float, default=0.4, help="pausa depois de cada no")
     p.add_argument(
@@ -676,7 +733,13 @@ def main(argv: list[str] | None = None) -> int:
     cfg = p.parse_args(argv)
 
     if cfg.voz == "?":
-        print("\n".join(vozes_disponiveis()) or "comando `say` indisponivel")
+        vozes = vozes_disponiveis()
+        if not vozes:
+            print("comando `say` indisponivel")
+            return 0
+        escolhida = escolher_voz(None, cfg.idioma)
+        for nome, regiao in vozes:
+            print(f"{regiao}  {nome}" + ("   <-- escolhida" if nome == escolhida else ""))
         return 0
 
     usar_applescript = cfg.motor == "applescript" and cfg.modo != "apresentacao"
