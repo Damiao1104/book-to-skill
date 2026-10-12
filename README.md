@@ -110,9 +110,9 @@ Formas de realce (`--realce`):
 
 | Modo | O que faz |
 |---|---|
-| `auto` (predefinição) | Cor de fundo **e** cor do texto — o fundo não se vê em estilos sem preenchimento, a cor do texto vê-se sempre |
+| `auto` (predefinição) | Cor de fundo **e** marcador — as duas propriedades que a 13.1 aceita num mapa com estilo |
 | `fundo` | Só a cor de fundo (`--cor-realce 180,220,255`) |
-| `texto` | Só a cor do texto (`--cor-texto 200,0,0`) |
+| `texto` | Só a cor do texto (`--cor-texto 200,0,0`) — **só funciona** em mapas cujo estilo não fixe a cor do texto |
 | `marcador` | Põe um marcador (*bookmark*) no nó |
 | `nenhum` | Não toca no documento |
 
@@ -122,8 +122,10 @@ Se o realce não aparecer, o professor avisa uma vez e indica a sonda:
 osascript mac/testar_realce.applescript 1.1
 ```
 
-Ela aplica as quatro marcas à vez, dois segundos cada, reponde-as, e diz quais a
-aplicação aceitou — basta olhar para o mapa e ver qual aparece.
+Ela aplica as quatro marcas à vez, dois segundos cada, repõe-as, e diz quais a
+aplicação aceitou — basta olhar para o mapa e ver qual aparece. Num mapa de
+estudo típico (medido na 13.1), a cor do texto e a cor da linha vêm do estilo e
+não são alteráveis; a cor de fundo e o marcador funcionam.
 
 ### Caminhos alternativos para conduzir a sessão
 

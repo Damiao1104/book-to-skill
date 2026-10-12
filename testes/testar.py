@@ -243,15 +243,21 @@ def testar_guiao_applescript() -> None:
     print("guiao AppleScript do foco:")
     motor = professor.MotorAppleScript("MindManager", 1)
     motor.realce_props = professor.props_realce("auto", "255,220,130", "200,0,0")
+    verificar(
+        [p for p, _ in motor.realce_props] == ["fill color", "bookmark"],
+        "o realce auto usa a cor de fundo e o marcador",
+    )
 
     guioes: list[str] = []
 
     def _tell_falso(corpo: str) -> str:
         guioes.append(corpo)
-        # cor para cada propriedade, e aviso vazio
-        return professor.US.join(
-            ["{1, 2, 3}"] * len(motor.realce_props) + [""]
-        )
+        # um valor plausivel por propriedade (cor ou booleano), e aviso vazio
+        valores = [
+            "{1, 2, 3}" if novo.startswith("{") else "false"
+            for _, novo in motor.realce_props
+        ]
+        return professor.US.join(valores + [""])
 
     motor._tell = _tell_falso  # type: ignore[method-assign]
     motor.zoom_inicial = 100  # como se `preparar()` tivesse corrido
@@ -294,8 +300,9 @@ def testar_guiao_applescript() -> None:
     verificar("zoom document 1 to 130" in guioes[1], "e aproxima no fim")
     verificar(
         'set fill color of topic id "ID-2" of document 1 to {1, 2, 3}' in guioes[2]
+        and 'set bookmark of topic id "ID-2" of document 1 to false' in guioes[2]
         and "zoom document 1 to 100" in guioes[2],
-        "restaurar repoe o ultimo realce e o zoom",
+        "restaurar repoe o realce (cor e marcador) e o zoom",
     )
 
 

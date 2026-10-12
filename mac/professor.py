@@ -352,15 +352,16 @@ RS, US = chr(30), chr(31)
 def props_realce(modo: str, cor_fundo: str, cor_texto: str) -> list[tuple[str, str]]:
     """Propriedades a mexer em cada modo de realce: [(propriedade, valor)].
 
-    O `fill color` nem sempre se ve: muitos estilos do MindManager desenham os
-    topicos sem preenchimento, e a cor muda sem efeito visivel. Por isso o modo
-    `auto` mexe tambem na cor do texto, que se ve sempre.
+    Verificado na 13.1 com um mapa real: a cor do texto e a cor da linha vem do
+    estilo do mapa e nao sao alteraveis; o que a aplicacao aceita e a cor de
+    fundo e o marcador. Por isso o modo `auto` combina esses dois — a cor de
+    fundo quando o estilo a desenha, e o marcador, que se ve sempre.
     """
     fundo = ("fill color", cor_applescript(cor_fundo))
     texto = ("text color", cor_applescript(cor_texto))
     marcador = ("bookmark", "true")
     return {
-        "auto": [fundo, texto],
+        "auto": [fundo, marcador],
         "fundo": [fundo],
         "texto": [texto],
         "marcador": [marcador],
@@ -1109,8 +1110,8 @@ def main(argv: list[str] | None = None) -> int:
         "--realce",
         choices=("auto", "fundo", "texto", "marcador", "nenhum"),
         default="auto",
-        help="como marcar o no em leitura: auto (fundo + cor do texto), fundo, "
-        "texto, marcador (bookmark) ou nenhum",
+        help="como marcar o no em leitura: auto (cor de fundo + marcador), "
+        "fundo, texto, marcador ou nenhum",
     )
     p.add_argument(
         "--cor-realce",
