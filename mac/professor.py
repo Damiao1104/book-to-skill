@@ -547,10 +547,8 @@ class MotorAppleScript:
             if p < passos:
                 linhas.append(f"delay {pausa:.2f}")
 
-        devolver = " & ".join(
-            [f'"{US}" & '.join(variaveis)] if variaveis else ['""']
-        )
-        linhas.append(f'return {devolver} & "{US}" & aviso')
+        separador = f' & "{US}" & '
+        linhas.append("return " + separador.join(variaveis + ["aviso"]))
 
         bruto = self._tell("\n".join(linhas))
         campos = bruto.split(US)
@@ -585,6 +583,14 @@ class MotorAppleScript:
                 "           osascript mac/testar_realce.applescript "
                 + (no.ident or "1")
             )
+
+    def restaurar(self) -> None:
+        """Repoe o realce do ultimo no e o zoom inicial do documento."""
+        linhas = self._repor_realce()
+        if self.zoom_inicial is not None:
+            linhas.append(f"zoom document {self.documento} to {self.zoom_inicial}")
+        if linhas:
+            self._tell("\n".join(linhas))
 
     def ler_selecao(self) -> "tuple[No | None, str]":
         """O no seleccionado no mapa, e o que falhou (para nao esconder erros).

@@ -234,6 +234,63 @@ def testar_escolha_de_voz() -> None:
         professor.vozes_disponiveis = original
 
 
+def testar_guiao_applescript() -> None:
+    """Valida o AppleScript gerado, nao so o seu conteudo.
+
+    Um erro de construcao (separadores mal colados) passou por testes que
+    apenas olhavam para o texto do guiao; aqui verifica-se a forma.
+    """
+    print("guiao AppleScript do foco:")
+    motor = professor.MotorAppleScript("MindManager", 1)
+    motor.realce_props = professor.props_realce("auto", "255,220,130", "200,0,0")
+
+    guioes: list[str] = []
+
+    def _tell_falso(corpo: str) -> str:
+        guioes.append(corpo)
+        # cor para cada propriedade, e aviso vazio
+        return professor.US.join(
+            ["{1, 2, 3}"] * len(motor.realce_props) + [""]
+        )
+
+    motor._tell = _tell_falso  # type: ignore[method-assign]
+    motor.zoom_inicial = 100  # como se `preparar()` tivesse corrido
+    no1 = No(texto="Um", nivel=1, caminho=(0,), ident="ID-1")
+    no2 = No(texto="Dois", nivel=2, caminho=(0, 0), ident="ID-2")
+    motor.focar(no1, 75, 130, 3, 0.05)
+    motor.focar(no2, 75, 130, 3, 0.05)
+    motor.restaurar()
+
+    for numero, guiao in enumerate(guioes, 1):
+        for linha in guiao.splitlines():
+            verificar(
+                linha.count('"') % 2 == 0,
+                f"guiao {numero}: aspas equilibradas em {linha[:60]!r}",
+            )
+
+    retorno = [l for l in guioes[0].splitlines() if l.startswith("return ")]
+    esperado = (
+        f'return v0 & "{professor.US}" & v1 & "{professor.US}" & aviso'
+    )
+    verificar(retorno == [esperado], f"linha de retorno: {retorno}")
+
+    verificar(
+        'reveal topic id "ID-1" of document 1' in guioes[0],
+        "o no e enderecado por id",
+    )
+    verificar(
+        'set fill color of topic id "ID-1" of document 1 to {1, 2, 3}' in guioes[1],
+        "o segundo guiao repoe a cor do primeiro no",
+    )
+    verificar("zoom document 1 to 75" in guioes[1], "afasta antes de mudar de no")
+    verificar("zoom document 1 to 130" in guioes[1], "e aproxima no fim")
+    verificar(
+        'set fill color of topic id "ID-2" of document 1 to {1, 2, 3}' in guioes[2]
+        and "zoom document 1 to 100" in guioes[2],
+        "restaurar repoe o ultimo realce e o zoom",
+    )
+
+
 def main() -> int:
     import tempfile
 
@@ -244,6 +301,7 @@ def main() -> int:
     testar_cores()
     testar_escolha_de_voz()
     testar_vozes_repetidas()
+    testar_guiao_applescript()
 
     print()
     if falhas:
