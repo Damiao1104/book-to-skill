@@ -33,6 +33,19 @@ tell application "System Events"
 								if tecla is not missing value then set atalho to "  [cmd+" & tecla & "]"
 							end try
 							set relatorio to relatorio & "   " & nomeItem & atalho & linefeed
+							try
+								repeat with si in menu items of menu 1 of mi
+									set nomeSub to name of si
+									if nomeSub is not missing value and nomeSub is not "" then
+										set atalhoSub to ""
+										try
+											set teclaSub to value of attribute "AXMenuItemCmdChar" of si
+											if teclaSub is not missing value then set atalhoSub to "  [cmd+" & teclaSub & "]"
+										end try
+										set relatorio to relatorio & "      - " & nomeSub & atalhoSub & linefeed
+									end if
+								end repeat
+							end try
 						end if
 					end repeat
 				end try

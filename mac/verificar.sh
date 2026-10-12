@@ -25,8 +25,9 @@ if [ -d "$CAMINHO" ]; then
     SDEF=$(find "$CAMINHO/Contents" -maxdepth 3 -name "*.sdef" 2>/dev/null)
     if [ -n "$SDEF" ]; then
         echo "$SDEF"
-        echo "--- comandos e classes declarados ---"
-        grep -o '<\(command\|class\) name="[^"]*"' $SDEF | sort -u
+        echo "--- resumo das classes principais ---"
+        python3 "$(dirname "$0")/dicionario.py" --sdef "$(echo $SDEF | head -1)" \
+            2>&1 || grep -o '<\(command\|class\) name="[^"]*"' $SDEF | sort -u
     else
         /usr/libexec/PlistBuddy -c 'Print :NSAppleScriptEnabled' \
             "$CAMINHO/Contents/Info.plist" 2>/dev/null \
