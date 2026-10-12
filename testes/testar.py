@@ -279,6 +279,14 @@ def testar_guiao_applescript() -> None:
         "o no e enderecado por id",
     )
     verificar(
+        "set collapsed" not in guioes[0],
+        "nao se tenta fechar/abrir o tema central (nivel 1)",
+    )
+    verificar(
+        'set collapsed of topic id "ID-2" of document 1 to false' in guioes[1],
+        "mas expande-se os nos mais fundos",
+    )
+    verificar(
         'set fill color of topic id "ID-1" of document 1 to {1, 2, 3}' in guioes[1],
         "o segundo guiao repoe a cor do primeiro no",
     )

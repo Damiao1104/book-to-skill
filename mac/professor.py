@@ -524,16 +524,18 @@ class MotorAppleScript:
         linhas: list[str] = self._repor_realce()
 
         linhas.append(f"zoom document {self.documento} to {panoramico}")
+        linhas.append('set aviso to ""')
         # Expandir o no e preciso para os filhos ficarem visiveis; se a
-        # aplicacao recusar, guardamos o motivo em vez de o engolir.
-        linhas.append(
-            'set aviso to ""\n'
-            "try\n"
-            f"set collapsed of {ref} to false\n"
-            "on error e\n"
-            "set aviso to e\n"
-            "end try"
-        )
+        # aplicacao recusar, guardamos o motivo em vez de o engolir. O tema
+        # central nunca pode ser fechado, por isso nem se tenta.
+        if no.nivel > 1:
+            linhas.append(
+                "try\n"
+                f"set collapsed of {ref} to false\n"
+                "on error e\n"
+                "set aviso to e\n"
+                "end try"
+            )
         # A classe `topic` nao responde a `select` (confirmado na 13.1): e o
         # `reveal` que traz o no para a vista.
         linhas.append(f"reveal {ref}")
@@ -570,6 +572,13 @@ class MotorAppleScript:
             guardados.append((prop, lido))
         self.realcado = (ref, guardados) if guardados else None
 
+        if aviso and any(
+            marca in aviso.lower()
+            for marca in ("can not be collapsed", "cannot be collapsed")
+        ):
+            # Alguns topicos (o central, e os que nao tem filhos) nao fecham:
+            # nao ha nada a expandir e nada a avisar.
+            aviso = ""
         if aviso and aviso not in self.avisos:
             self.avisos.add(aviso)
             print(f"    aviso: nao consegui expandir o no — {aviso}")
