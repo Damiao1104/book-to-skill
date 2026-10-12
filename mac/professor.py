@@ -23,6 +23,7 @@ import html
 import os
 import re
 import shutil
+import select
 import subprocess
 import sys
 import time
@@ -828,12 +829,12 @@ def testar_gatilho(cfg: argparse.Namespace) -> int:
     caminho = os.path.expanduser(cfg.ficheiro_avanco)
     print(f"A observar {caminho}")
     print("Prima o atalho de teclado algumas vezes. Ctrl+C para terminar.\n")
-    anterior = os.path.getmtime(caminho) if os.path.exists(caminho) else None
+    anterior = _estado_gatilho(caminho)
     toques = 0
     try:
         while True:
             time.sleep(0.2)
-            actual = os.path.getmtime(caminho) if os.path.exists(caminho) else None
+            actual = _estado_gatilho(caminho)
             if actual != anterior:
                 anterior = actual
                 toques += 1
@@ -842,17 +843,30 @@ def testar_gatilho(cfg: argparse.Namespace) -> int:
         print()
     if toques == 0:
         print(
-            "Nenhum toque detectado. Verifique, na aplicacao Atalhos:\n"
-            "  - a accao e Executar Script de Shell;\n"
-            f"  - o conteudo e: bash {os.path.join(os.path.dirname(os.path.abspath(__file__)), 'avancar.sh')}\n"
-            "  - a tecla esta atribuida nos detalhes do atalho (icone i);\n"
-            "  - o atalho corre sozinho quando premido dentro da propria app.\n"
+            "Nenhum toque detectado. Verifique, por esta ordem:\n"
+            "  1. Atalhos > Definicoes > Avancado: ligar \"Permitir a execucao\n"
+            "     de scripts\" — sem isto a accao de shell nao corre;\n"
+            "  2. a accao e Executar Script de Shell e o conteudo e, com\n"
+            "     caminhos absolutos (o Atalhos pode nao expandir o ~):\n"
+            f"       bash {os.path.join(os.path.dirname(os.path.abspath(__file__)), 'avancar.sh')} {caminho}\n"
+            "  3. a tecla esta atribuida nos detalhes do atalho (icone i);\n"
+            "  4. o atalho corre quando premido o botao na propria app Atalhos.\n"
             "Para confirmar o mecanismo sem o atalho, noutra janela do Terminal:\n"
-            f"  bash {os.path.join(os.path.dirname(os.path.abspath(__file__)), 'avancar.sh')}"
+            f"  bash {os.path.join(os.path.dirname(os.path.abspath(__file__)), 'avancar.sh')} {caminho}"
         )
     else:
         print(f"{toques} toque(s) detectado(s): o atalho funciona.")
     return 0
+
+
+def _estado_gatilho(caminho: str) -> tuple | None:
+    """Estado do ficheiro-gatilho: muda com um `touch`, uma reescrita ou uma
+    substituicao do ficheiro."""
+    try:
+        info = os.stat(caminho)
+    except OSError:
+        return None
+    return (info.st_mtime_ns, info.st_size, info.st_ino)
 
 
 def esperar_avanco(cfg: argparse.Namespace, seco: bool = False) -> None:
@@ -875,11 +889,17 @@ def esperar_avanco(cfg: argparse.Namespace, seco: bool = False) -> None:
 
     if cfg.avanco == "ficheiro":
         caminho = os.path.expanduser(cfg.ficheiro_avanco)
-        inicial = os.path.getmtime(caminho) if os.path.exists(caminho) else None
-        print(f"    a espera do gatilho ({caminho})")
+        inicial = _estado_gatilho(caminho)
+        print("    a espera do gatilho — ou do Enter, se preferir o Terminal")
         while True:
-            time.sleep(0.2)
-            actual = os.path.getmtime(caminho) if os.path.exists(caminho) else None
+            # Enter serve de alternativa sempre que o Terminal estiver em foco,
+            # para nunca se ficar preso por causa do atalho.
+            if sys.stdin.isatty() and select.select([sys.stdin], [], [], 0.2)[0]:
+                sys.stdin.readline()
+                return
+            if not sys.stdin.isatty():
+                time.sleep(0.2)
+            actual = _estado_gatilho(caminho)
             if actual != inicial:
                 return
 
@@ -956,10 +976,15 @@ def apresentar_applescript(
             "  --modo seguir       (narra o no que clicar no mapa)"
         )
     elif cfg.avanco == "ficheiro":
+        guiao = os.path.join(os.path.dirname(os.path.abspath(__file__)), "avancar.sh")
+        alvo = os.path.expanduser(cfg.ficheiro_avanco)
         print(
-            "Avanco por gatilho: ligue um atalho de teclado global a\n"
-            f"  bash {os.path.join(os.path.dirname(os.path.abspath(__file__)), 'avancar.sh')}\n"
-            "(ver a seccao «Caminhos alternativos» do README)."
+            "Avanco por gatilho. Na aplicacao Atalhos, a accao Executar Script\n"
+            "de Shell deve conter exactamente, com caminhos absolutos:\n"
+            f"  bash {guiao} {alvo}\n"
+            "E em Atalhos > Definicoes > Avancado tem de estar ligado\n"
+            '"Permitir a execucao de scripts".\n'
+            "O Enter aqui no Terminal tambem avanca, se preferir."
         )
 
     try:

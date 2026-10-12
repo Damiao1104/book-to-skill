@@ -139,13 +139,19 @@ Quatro formas, da que exige menos à que exige mais da aplicação:
 A tecla global é a opção mais prática para dar aula a olhar para o mapa, e não
 depende de nenhuma API do MindManager. Configuração, uma vez:
 
-1. abra a aplicação **Atalhos** (Shortcuts) → novo atalho;
-2. acção **Executar Script de Shell** com o conteúdo:
-   `bash ~/book-to-skill/mac/avancar.sh`
-3. nos detalhes do atalho, atribua uma **tecla de atalho** (por exemplo
-   `⌃⌥→`);
-4. corra `python3 mac/professor.py --avanco ficheiro` e use essa tecla para
-   avançar, com a janela que quiser em primeiro plano.
+1. em **Atalhos → Definições → Avançado**, ligue **"Permitir a execução de
+   scripts"**. Sem isto a acção de shell não corre e o atalho não faz nada;
+2. novo atalho → acção **Executar Script de Shell**, com **caminhos
+   absolutos** (a aplicação Atalhos pode não expandir o `~`):
+   `bash /Users/<utilizador>/book-to-skill/mac/avancar.sh /Users/<utilizador>/.professor-avanca`
+3. nos detalhes do atalho (ícone ⓘ), atribua uma **tecla** (por exemplo `⌃⌥→`);
+4. prima o botão de execução dentro da própria aplicação Atalhos uma vez, para
+   confirmar que corre e aceitar qualquer pedido de permissão;
+5. corra `python3 mac/professor.py --avanco ficheiro` e use essa tecla, com a
+   janela que quiser em primeiro plano.
+
+Enquanto espera pelo gatilho, **o `Enter` no Terminal também avança** — assim
+nunca fica preso se o atalho falhar.
 
 Para confirmar que o atalho dispara, **antes** de envolver o professor:
 
