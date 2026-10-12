@@ -527,11 +527,34 @@ def vozes_disponiveis() -> list[tuple[str, str]]:
         return []
     proc = subprocess.run(["say", "-v", "?"], capture_output=True, text=True)
     vozes: list[tuple[str, str]] = []
+    vistas: set[tuple[str, str]] = set()
+    for linha in proc.stdout.splitlines():
+        achado = re.match(r"^(.*?)\s+([a-z]{2}[-_][A-Z]{2})\s+#", linha)
+        if not achado:
+            continue
+        entrada = (achado.group(1).strip(), achado.group(2).replace("-", "_"))
+        # O mesmo nome aparece repetido quando estao instaladas duas variantes
+        # da voz (a compacta e a Premium/Melhorada). Para o `say` o nome e o
+        # mesmo e o macOS usa a de melhor qualidade, por isso basta uma entrada.
+        if entrada in vistas:
+            continue
+        vistas.add(entrada)
+        vozes.append(entrada)
+    return vozes
+
+
+def variantes_por_voz() -> dict[tuple[str, str], int]:
+    """Quantas vezes cada voz aparece no `say -v ?` (compacta + Premium = 2)."""
+    if not shutil.which("say"):
+        return {}
+    proc = subprocess.run(["say", "-v", "?"], capture_output=True, text=True)
+    contagem: dict[tuple[str, str], int] = {}
     for linha in proc.stdout.splitlines():
         achado = re.match(r"^(.*?)\s+([a-z]{2}[-_][A-Z]{2})\s+#", linha)
         if achado:
-            vozes.append((achado.group(1).strip(), achado.group(2).replace("-", "_")))
-    return vozes
+            chave = (achado.group(1).strip(), achado.group(2).replace("-", "_"))
+            contagem[chave] = contagem.get(chave, 0) + 1
+    return contagem
 
 
 # Marcas de qualidade no nome da voz; as Premium/Melhoradas soam muito melhor
@@ -617,11 +640,17 @@ def amostrar_vozes(idioma: str, velocidade: int) -> int:
         "e manifestacao unilateral de vontade."
     )
     escolhida = escolher_voz(None, idioma)
+    contagem = variantes_por_voz()
     ordenadas = sorted((n for n, _ in vozes), key=_qualidade)
     print(f"{len(ordenadas)} vozes {idioma}, da melhor para a pior:\n")
     for nome in ordenadas:
-        marca = "   <-- usada por omissao" if nome == escolhida else ""
-        print(f'  --voz "{nome}"{marca}')
+        notas = []
+        if nome == escolhida:
+            notas.append("usada por omissao")
+        if contagem.get((nome, idioma.replace("-", "_")), 1) > 1:
+            notas.append("duas variantes instaladas: o macOS usa a melhor")
+        sufixo = ("   <-- " + "; ".join(notas)) if notas else ""
+        print(f'  --voz "{nome}"{sufixo}')
         subprocess.run(
             ["say", "-v", nome, "-r", str(velocidade), "--", f"{nome}. {exemplo}"],
             check=False,

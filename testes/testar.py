@@ -158,6 +158,40 @@ def testar_cores() -> None:
     verificar(cor_applescript("99999,0,0") == "{65535, 0, 0}", "acima do maximo cortado")
 
 
+def testar_vozes_repetidas() -> None:
+    print("vozes repetidas no say -v ?:")
+    import subprocess as sp
+
+    saida = (
+        "Alex                en_US    # Hi!\n"
+        "Luciana (Português (Brasil)) pt_BR    # Oi\n"
+        "Luciana (Português (Brasil)) pt_BR    # Oi\n"
+        "Eddy (Português (Brasil)) pt_BR    # Oi\n"
+    )
+
+    class Falso:
+        stdout = saida
+
+    original_run, original_which = sp.run, professor.shutil.which
+    try:
+        professor.subprocess.run = lambda *a, **k: Falso()
+        professor.shutil.which = lambda _: "/usr/bin/say"
+        vozes = professor.vozes_disponiveis()
+        verificar(
+            [n for n, _ in vozes]
+            == ["Alex", "Luciana (Português (Brasil))", "Eddy (Português (Brasil))"],
+            "a voz repetida aparece uma so vez",
+        )
+        verificar(
+            professor.variantes_por_voz()[("Luciana (Português (Brasil))", "pt_BR")]
+            == 2,
+            "mas as duas variantes sao contadas",
+        )
+    finally:
+        professor.subprocess.run = original_run
+        professor.shutil.which = original_which
+
+
 def testar_escolha_de_voz() -> None:
     print("escolha da voz:")
     original = professor.vozes_disponiveis
@@ -209,6 +243,7 @@ def main() -> int:
         testar_leitura_mmap(tmp)
     testar_cores()
     testar_escolha_de_voz()
+    testar_vozes_repetidas()
 
     print()
     if falhas:

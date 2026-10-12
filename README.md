@@ -85,9 +85,12 @@ python3 mac/professor.py --voz "Luciana"
 As vozes compactas antigas (Luciana, Joana) soam robóticas. Instale a versão
 **Melhorada** ou **Premium** em *Definições do Sistema → Acessibilidade →
 Conteúdo falado → Voz do sistema → Gerir vozes*, escolhendo Português (Brasil).
-A escolha automática **prefere as Premium/Melhoradas** quando estão instaladas
-(aparecem no `say` como `Luciana (Premium)`), depois as dedicadas ao português e
-só então as multilingues. O nome da voz em uso é impresso no início de cada
+A escolha automática **prefere as Premium/Melhoradas** quando o nome o indica,
+depois as dedicadas ao português e só então as multilingues. Em algumas versões
+do macOS a Premium **não se identifica no nome**: a voz aparece duas vezes no
+`say -v ?` (a compacta e a Premium) com o mesmo nome, e o sistema usa a de melhor
+qualidade automaticamente. O `--amostra` assinala esses casos com *"duas
+variantes instaladas"*. O nome da voz em uso é impresso no início de cada
 sessão. Baixar o ritmo também ajuda: `--velocidade 160`.
 
 ### Realce do nó em foco
