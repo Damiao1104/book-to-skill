@@ -206,17 +206,7 @@ class Mac:
                 time.sleep(pausa)
 
     def falar(self, texto: str, voz: str | None, velocidade: int) -> None:
-        texto = _limpar(texto)
-        if not texto:
-            return
-        if self.seco:
-            print(f'    [seco] say: "{texto[:90]}"')
-            return
-        comando = ["say"]
-        if voz:
-            comando += ["-v", voz]
-        comando += ["-r", str(velocidade), "--", texto]
-        subprocess.run(comando, check=False)
+        falar_com_say(texto, voz, velocidade, seco=self.seco)
 
 
 def procurar_mapas(termo: str) -> list[str]:
@@ -237,8 +227,10 @@ def resolver_mapa(indicado: str) -> str:
 
     Com varios resultados, mostra-os numerados e pergunta qual usar.
     """
-    if os.path.exists(indicado):
+    if os.path.isfile(indicado):
         return indicado
+    if os.path.isdir(indicado):
+        raise SystemExit(f"{indicado} e uma pasta, nao um mapa.")
 
     achados = procurar_mapas(indicado)
     if not achados:
@@ -268,6 +260,130 @@ def resolver_mapa(indicado: str) -> str:
     if not escolha.isdigit() or not 1 <= int(escolha) <= len(achados):
         raise SystemExit("Nada escolhido.")
     return achados[int(escolha) - 1]
+
+
+def falar_com_say(
+    texto: str, voz: str | None, velocidade: int, seco: bool = False
+) -> None:
+    """Narra com o `say` do macOS. Partilhado pelos dois motores."""
+    texto = _limpar(texto)
+    if not texto:
+        return
+    if seco:
+        print(f'    [seco] say: "{texto[:90]}"')
+        return
+    comando = ["say"]
+    if voz:
+        comando += ["-v", voz]
+    comando += ["-r", str(velocidade), "--", texto]
+    subprocess.run(comando, check=False)
+
+
+RS, US = chr(30), chr(31)
+
+
+class MotorAppleScript:
+    """Controla o MindManager pelo dicionario AppleScript da aplicacao.
+
+    Usa os comandos `select`, `reveal` e `zoom <document> to <inteiro>`, pelo
+    que nao simula teclas nem depende da selecao inicial.
+    """
+
+    def __init__(self, app: str, documento: int = 1, seco: bool = False):
+        self.app = app
+        self.documento = documento
+        self.seco = seco
+        self.zoom_inicial: int | None = None
+
+    # -- infra-estrutura -------------------------------------------------
+    def _osascript(self, *args: str) -> str:
+        if self.seco:
+            print(f"    [seco] osascript {' '.join(args)[:120]}")
+            return ""
+        proc = subprocess.run(["osascript", *args], capture_output=True, text=True)
+        if proc.returncode != 0:
+            erro = proc.stderr.strip()
+            if "-1743" in erro or "not authorized" in erro.lower():
+                raise SystemExit(
+                    "O macOS bloqueou os comandos para o MindManager.\n"
+                    "Autorize em Definicoes do Sistema > Privacidade e Seguranca >\n"
+                    "Automatizacao: o Terminal a controlar o MindManager."
+                )
+            raise SystemExit(f"osascript falhou: {erro}")
+        return proc.stdout
+
+    def _tell(self, corpo: str) -> str:
+        return self._osascript(
+            "-e", f'tell application "{self.app}"\n{corpo}\nend tell'
+        )
+
+    def _ref(self, caminho: tuple[int, ...]) -> str:
+        """Referencia AppleScript do no: subtopic N of ... of central topic."""
+        ref = f"central topic of document {self.documento}"
+        for indice in caminho:
+            ref = f"subtopic {indice + 1} of {ref}"
+        return ref
+
+    # -- leitura do mapa aberto ------------------------------------------
+    def estrutura(self, guiao: str) -> list[No]:
+        bruto = self._osascript(guiao, str(self.documento))
+        nos: list[No] = []
+        for registo in bruto.split(RS):
+            if not registo.strip(US).strip():
+                continue
+            campos = registo.split(US)
+            if len(campos) < 4:
+                continue
+            caminho_txt, nivel_txt, nome, notas = campos[0], campos[1], campos[2], campos[3]
+            caminho = tuple(
+                int(p) - 1 for p in caminho_txt.strip().split(".") if p.strip()
+            )
+            nos.append(
+                No(
+                    texto=_limpar(nome),
+                    notas=_limpar(notas),
+                    nivel=int(nivel_txt.strip() or len(caminho) + 1),
+                    caminho=caminho,
+                )
+            )
+        if not nos:
+            raise SystemExit(
+                "O MindManager nao devolveu nenhum no.\n"
+                "Confirme que tem um mapa aberto e corra:\n"
+                "  osascript mac/testar.applescript"
+            )
+        return nos
+
+    # -- zoom e foco -----------------------------------------------------
+    def preparar(self) -> None:
+        self._osascript("-e", f'tell application "{self.app}" to activate')
+        saida = self._tell(f"get zoom level of document {self.documento}")
+        try:
+            self.zoom_inicial = int(saida.strip())
+        except ValueError:
+            self.zoom_inicial = None
+
+    def focar(self, caminho: tuple[int, ...], panoramico: int, foco: int,
+              passos: int, pausa: float) -> None:
+        """Afasta, seleciona o no e aproxima — o pulso de zoom de cada mudanca."""
+        ref = self._ref(caminho)
+        linhas = [f"zoom document {self.documento} to {panoramico}"]
+        linhas.append(f"try\nset collapsed of {ref} to false\nend try")
+        linhas.append(f"select {ref}")
+        linhas.append(f"reveal {ref}")
+        for p in range(1, passos + 1):
+            pct = panoramico + round((foco - panoramico) * p / passos)
+            linhas.append(f"zoom document {self.documento} to {pct}")
+            if p < passos:
+                linhas.append(f"delay {pausa:.2f}")
+        self._tell("\n".join(linhas))
+
+    def restaurar(self) -> None:
+        if self.zoom_inicial is not None:
+            self._tell(f"zoom document {self.documento} to {self.zoom_inicial}")
+
+    def falar(self, texto: str, voz: str | None, velocidade: int) -> None:
+        falar_com_say(texto, voz, velocidade, seco=self.seco)
 
 
 def vozes_disponiveis() -> list[str]:
@@ -353,6 +469,39 @@ def apresentar(nos: list[No], mac: Mac, cfg: argparse.Namespace) -> None:
         mac.atalho(cfg.tecla_zoom_out, cfg.zoom_inicial)           # devolve o zoom ao estado inicial
 
 
+def apresentar_applescript(
+    nos: list[No], motor: MotorAppleScript, cfg: argparse.Namespace
+) -> None:
+    voz = escolher_voz(cfg.voz)
+    motor.preparar()
+
+    for indice, no in enumerate(nos):
+        if indice + 1 < cfg.inicio:
+            continue
+        rotulo = ".".join(str(p + 1) for p in no.caminho) or "1"
+        print(f"[{indice + 1}/{len(nos)}] {rotulo} {'  ' * (no.nivel - 1)}{no.texto}")
+
+        motor.focar(
+            no.caminho,
+            cfg.zoom_panoramico,
+            cfg.zoom_foco,
+            cfg.passos,
+            cfg.pausa_passo,
+        )
+        motor.falar(frase(no, cfg.anunciar_nivel, cfg.notas), voz, cfg.velocidade)
+
+        if cfg.manual and not motor.seco:
+            try:
+                input("    Enter para o no seguinte (Ctrl+C para parar) ")
+            except EOFError:
+                cfg.manual = False
+        elif not motor.seco:
+            time.sleep(cfg.pausa)
+
+    motor.falar("Fim do mapa.", voz, cfg.velocidade)
+    motor.restaurar()
+
+
 def listar(nos: list[No]) -> None:
     for indice, no in enumerate(nos, 1):
         rotulo = ".".join(str(p + 1) for p in no.caminho) or "1"
@@ -367,9 +516,29 @@ def main(argv: list[str] | None = None) -> int:
     )
     p.add_argument(
         "mapa",
+        nargs="?",
         help="caminho do .mmap, ou um pedaco do nome do mapa "
-        '(ex.: "Direito Constitucional") — procurado com o Spotlight',
+        '(ex.: "Direito Constitucional") — procurado com o Spotlight. '
+        "Sem isto, usa o mapa que estiver aberto no MindManager",
     )
+    p.add_argument(
+        "--motor",
+        choices=("applescript", "teclado"),
+        default="applescript",
+        help="applescript: comandos do dicionario da aplicacao (predefinicao); "
+        "teclado: setas e atalhos de zoom, para quando o AppleScript falhar",
+    )
+    p.add_argument(
+        "--zoom-foco", type=int, default=130, help="%% de zoom no no em foco"
+    )
+    p.add_argument(
+        "--zoom-panoramico", type=int, default=75, help="%% de zoom entre nos"
+    )
+    p.add_argument("--passos", type=int, default=6, help="passos da animacao de zoom")
+    p.add_argument(
+        "--pausa-passo", type=float, default=0.05, help="segundos por passo de zoom"
+    )
+    p.add_argument("--documento", type=int, default=1, help="indice do mapa aberto")
     p.add_argument(
         "--modo",
         choices=("navegacao", "apresentacao", "listar"),
@@ -430,13 +599,34 @@ def main(argv: list[str] | None = None) -> int:
         print("\n".join(vozes_disponiveis()) or "comando `say` indisponivel")
         return 0
 
-    cfg.mapa = resolver_mapa(cfg.mapa)
-    nos = em_profundidade(ler_mapa(cfg.mapa))
+    usar_applescript = cfg.motor == "applescript" and cfg.modo != "apresentacao"
+
+    if cfg.mapa:
+        # Fonte: o ficheiro .mmap indicado.
+        cfg.mapa = resolver_mapa(cfg.mapa)
+        nos = em_profundidade(ler_mapa(cfg.mapa))
+    elif usar_applescript:
+        # Fonte: o mapa aberto na aplicacao, lido pelo dicionario AppleScript.
+        guiao = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "estrutura.applescript")
+        nos = MotorAppleScript(cfg.app, cfg.documento, seco=cfg.seco).estrutura(guiao)
+    else:
+        raise SystemExit(
+            "Indique um mapa, ou deixe o motor applescript ler o mapa aberto.\n"
+            "  python3 mac/professor.py                      # mapa aberto na app\n"
+            '  python3 mac/professor.py "Ato Administrativo"  # por nome'
+        )
+
     if cfg.modo == "listar":
         listar(nos)
         return 0
 
-    apresentar(nos, Mac(cfg.app, seco=cfg.seco), cfg)
+    if usar_applescript:
+        apresentar_applescript(
+            nos, MotorAppleScript(cfg.app, cfg.documento, seco=cfg.seco), cfg
+        )
+    else:
+        apresentar(nos, Mac(cfg.app, seco=cfg.seco), cfg)
     return 0
 
 

@@ -26,12 +26,24 @@ O que isto implica, confirmado antes de escrever o código:
 - o **zoom** no Mac é `Cmd` com `+` / `-`. Se na 13.1 a tecla for outra, muda-se
   com `--tecla-zoom-in` / `--tecla-zoom-out`, sem tocar no código.
 
-A versão Mac do MindManager não tem editor de macros, por isso aqui o
-professor é um script Python que faz duas coisas:
+A versão Mac do MindManager não tem editor de macros, mas **a 13.1 tem dicionário
+AppleScript** (`MindManagerSuite.sdef`), confirmado na máquina: expõe
+`select`, `reveal`, `zoom <document> to <inteiro>`, `zoom level`,
+`central topic`, `subtopic`, `name`, `notes` e `collapsed`. O professor usa isso
+— comandos directos, sem simular teclas:
 
-1. lê a estrutura do mapa directamente do ficheiro `.mmap` (texto, notas, níveis);
-2. narra cada nó com a voz do macOS e conduz a janela do MindManager por
-   teclado — setas para mudar de nó e `Cmd+-` / `Cmd+=` para o pulso de zoom.
+1. lê a estrutura do **mapa aberto na aplicação** (ou de um ficheiro `.mmap`, se
+   indicar um);
+2. em cada nó: afasta o zoom, selecciona o nó, trá-lo à vista com `reveal` e
+   aproxima em passos até à percentagem de foco;
+3. narra o texto e as notas com a voz do macOS.
+
+Como o zoom é dado em percentagem exacta, não há deriva; e como o nó é
+selecionado por referência, não é preciso clicar no tema central antes de
+começar, nem há problema com ramos do lado esquerdo.
+
+O motor antigo, por teclado, fica disponível em `--motor teclado` para o caso de
+o AppleScript falhar.
 
 ### Preparar (uma vez)
 
@@ -44,6 +56,25 @@ professor é um script Python que faz duas coisas:
    `python3 mac/professor.py x --voz ?`
 
 ### Correr
+
+O caminho mais simples: **abra o mapa no MindManager e corra sem argumentos** —
+o professor lê o mapa aberto.
+
+```bash
+python3 mac/professor.py                 # narra o mapa aberto
+python3 mac/professor.py --modo listar   # só o índice do mapa aberto
+python3 mac/professor.py --manual        # espera pelo Enter em cada nó
+```
+
+Antes da primeira utilização, confirme as capacidades do AppleScript na sua
+versão (com um mapa aberto):
+
+```bash
+osascript mac/testar.applescript
+```
+
+Cada linha diz `OK` ou `FALHA` para uma capacidade (zoom, select, reveal,
+collapsed). Se alguma falhar, mande-me a linha — ou use `--motor teclado`.
 
 Se ainda não tiver um `.mmap` à mão, gere um de exemplo para testar tudo:
 
@@ -95,6 +126,11 @@ começar onde o script espera.
 
 | Opção | Predefinição | Efeito |
 |---|---|---|
+| `--motor applescript` | `applescript` | Comandos do dicionário da aplicação; `teclado` usa setas e atalhos |
+| `--zoom-foco 130` | `130` | Percentagem de zoom no nó em foco (motor AppleScript) |
+| `--zoom-panoramico 75` | `75` | Percentagem entre nós, antes de aproximar |
+| `--passos 6` | `6` | Passos da animação de zoom |
+| `--documento 1` | `1` | Qual dos mapas abertos usar |
 | `--voz Joana` | voz portuguesa, se existir | Voz do `say`; `--voz ?` lista as instaladas |
 | `--velocidade 180` | `180` | Palavras por minuto |
 | `--pulso 2` | `2` | Passos de zoom a afastar e a aproximar em cada mudança de nó (simétrico, por isso o zoom não "foge") |
