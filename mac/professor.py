@@ -219,6 +219,57 @@ class Mac:
         subprocess.run(comando, check=False)
 
 
+def procurar_mapas(termo: str) -> list[str]:
+    """Mapas .mmap cujo nome contem `termo`, via Spotlight (mdfind)."""
+    if not shutil.which("mdfind"):
+        return []
+    lar = os.path.expanduser("~")
+    proc = subprocess.run(
+        ["mdfind", "-onlyin", lar, f"kMDItemFSName=*{termo}*.mmap"],
+        capture_output=True,
+        text=True,
+    )
+    return [linha for linha in proc.stdout.splitlines() if linha.strip()]
+
+
+def resolver_mapa(indicado: str) -> str:
+    """Aceita um caminho ou um pedaco do nome do mapa.
+
+    Com varios resultados, mostra-os numerados e pergunta qual usar.
+    """
+    if os.path.exists(indicado):
+        return indicado
+
+    achados = procurar_mapas(indicado)
+    if not achados:
+        raise SystemExit(
+            f"Nao encontrei o ficheiro nem mapas com \"{indicado}\" no nome.\n\n"
+            "Para ver todos os seus mapas:\n"
+            "  mdfind -onlyin ~ 'kMDItemFSName=*.mmap'\n\n"
+            "Ou escreva o comando e arraste o ficheiro .mmap do Finder para a\n"
+            "janela do Terminal — o caminho aparece sozinho.\n\n"
+            "Para experimentar sem um mapa seu:\n"
+            "  python3 exemplos/criar_mapa_exemplo.py\n"
+            "  python3 mac/professor.py exemplo.mmap --modo listar"
+        )
+
+    if len(achados) == 1:
+        print(f"Mapa: {achados[0]}")
+        return achados[0]
+
+    print(f"{len(achados)} mapas com \"{indicado}\" no nome:\n")
+    for i, caminho in enumerate(achados, 1):
+        local = "Drive" if "CloudStorage" in caminho else "local"
+        print(f"  {i:>3}. [{local}] {caminho}")
+    try:
+        escolha = input("\nNumero do mapa (Enter para desistir): ").strip()
+    except EOFError:
+        escolha = ""
+    if not escolha.isdigit() or not 1 <= int(escolha) <= len(achados):
+        raise SystemExit("Nada escolhido.")
+    return achados[int(escolha) - 1]
+
+
 def vozes_disponiveis() -> list[str]:
     if not shutil.which("say"):
         return []
@@ -314,7 +365,11 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(
         description="Professor do Mapa — narrador guiado para MindManager (macOS)."
     )
-    p.add_argument("mapa", help="ficheiro .mmap (ou o Document.xml de dentro dele)")
+    p.add_argument(
+        "mapa",
+        help="caminho do .mmap, ou um pedaco do nome do mapa "
+        '(ex.: "Direito Constitucional") — procurado com o Spotlight',
+    )
     p.add_argument(
         "--modo",
         choices=("navegacao", "apresentacao", "listar"),
@@ -375,18 +430,7 @@ def main(argv: list[str] | None = None) -> int:
         print("\n".join(vozes_disponiveis()) or "comando `say` indisponivel")
         return 0
 
-    if not os.path.exists(cfg.mapa):
-        raise SystemExit(
-            f"Nao encontrei o ficheiro:\n  {cfg.mapa}\n\n"
-            "Indique o caminho real do seu mapa. Para o descobrir:\n"
-            "  mdfind -onlyin ~ 'kMDItemFSName=*.mmap'\n\n"
-            "Ou escreva o comando e arraste o ficheiro .mmap do Finder para a\n"
-            "janela do Terminal — o caminho aparece sozinho.\n\n"
-            "Para experimentar sem um mapa seu:\n"
-            "  python3 exemplos/criar_mapa_exemplo.py\n"
-            "  python3 mac/professor.py exemplo.mmap --modo listar"
-        )
-
+    cfg.mapa = resolver_mapa(cfg.mapa)
     nos = em_profundidade(ler_mapa(cfg.mapa))
     if cfg.modo == "listar":
         listar(nos)

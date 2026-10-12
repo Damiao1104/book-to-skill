@@ -52,9 +52,19 @@ python3 exemplos/criar_mapa_exemplo.py          # escreve exemplo.mmap
 python3 mac/professor.py exemplo.mmap --modo listar
 ```
 
-Para encontrar os seus mapas: `mdfind -onlyin ~ 'kMDItemFSName=*.mmap'`.
-Em alternativa, escreva o comando e arraste o ficheiro do Finder para o
-Terminal — o caminho aparece sozinho, já com os espaços tratados.
+Não precisa de escrever caminhos: **basta um pedaço do nome do mapa** e o
+script procura-o com o Spotlight. Se houver vários, mostra-os numerados
+(marcando quais estão no Google Drive) e pergunta qual usar.
+
+```bash
+python3 mac/professor.py "Direito Constitucional" --modo listar
+```
+
+Para ver todos de uma vez: `mdfind -onlyin ~ 'kMDItemFSName=*.mmap'`. Ou escreva
+o comando e arraste o ficheiro do Finder para o Terminal.
+
+Mapas guardados no Google Drive podem estar só na nuvem; a primeira leitura
+obriga o Drive a descarregá-los, o que pode demorar alguns segundos.
 
 ```bash
 # 1) ver primeiro o índice que vai ser lido (não toca na aplicação)
