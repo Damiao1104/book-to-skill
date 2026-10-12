@@ -375,6 +375,18 @@ def main(argv: list[str] | None = None) -> int:
         print("\n".join(vozes_disponiveis()) or "comando `say` indisponivel")
         return 0
 
+    if not os.path.exists(cfg.mapa):
+        raise SystemExit(
+            f"Nao encontrei o ficheiro:\n  {cfg.mapa}\n\n"
+            "Indique o caminho real do seu mapa. Para o descobrir:\n"
+            "  mdfind -onlyin ~ 'kMDItemFSName=*.mmap'\n\n"
+            "Ou escreva o comando e arraste o ficheiro .mmap do Finder para a\n"
+            "janela do Terminal — o caminho aparece sozinho.\n\n"
+            "Para experimentar sem um mapa seu:\n"
+            "  python3 exemplos/criar_mapa_exemplo.py\n"
+            "  python3 mac/professor.py exemplo.mmap --modo listar"
+        )
+
     nos = em_profundidade(ler_mapa(cfg.mapa))
     if cfg.modo == "listar":
         listar(nos)

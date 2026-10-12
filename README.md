@@ -45,6 +45,17 @@ professor é um script Python que faz duas coisas:
 
 ### Correr
 
+Se ainda não tiver um `.mmap` à mão, gere um de exemplo para testar tudo:
+
+```bash
+python3 exemplos/criar_mapa_exemplo.py          # escreve exemplo.mmap
+python3 mac/professor.py exemplo.mmap --modo listar
+```
+
+Para encontrar os seus mapas: `mdfind -onlyin ~ 'kMDItemFSName=*.mmap'`.
+Em alternativa, escreva o comando e arraste o ficheiro do Finder para o
+Terminal — o caminho aparece sozinho, já com os espaços tratados.
+
 ```bash
 # 1) ver primeiro o índice que vai ser lido (não toca na aplicação)
 python3 mac/professor.py ~/Documentos/mapa.mmap --modo listar
