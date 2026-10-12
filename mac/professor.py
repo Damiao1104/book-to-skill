@@ -808,6 +808,38 @@ def amostrar_vozes(idioma: str, velocidade: int) -> int:
     return 0
 
 
+def testar_gatilho(cfg: argparse.Namespace) -> int:
+    """Mostra cada toque no ficheiro-gatilho, para testar o atalho de teclado."""
+    caminho = os.path.expanduser(cfg.ficheiro_avanco)
+    print(f"A observar {caminho}")
+    print("Prima o atalho de teclado algumas vezes. Ctrl+C para terminar.\n")
+    anterior = os.path.getmtime(caminho) if os.path.exists(caminho) else None
+    toques = 0
+    try:
+        while True:
+            time.sleep(0.2)
+            actual = os.path.getmtime(caminho) if os.path.exists(caminho) else None
+            if actual != anterior:
+                anterior = actual
+                toques += 1
+                print(f"  toque {toques}  ({time.strftime('%H:%M:%S')})")
+    except KeyboardInterrupt:
+        print()
+    if toques == 0:
+        print(
+            "Nenhum toque detectado. Verifique, na aplicacao Atalhos:\n"
+            "  - a accao e Executar Script de Shell;\n"
+            f"  - o conteudo e: bash {os.path.join(os.path.dirname(os.path.abspath(__file__)), 'avancar.sh')}\n"
+            "  - a tecla esta atribuida nos detalhes do atalho (icone i);\n"
+            "  - o atalho corre sozinho quando premido dentro da propria app.\n"
+            "Para confirmar o mecanismo sem o atalho, noutra janela do Terminal:\n"
+            f"  bash {os.path.join(os.path.dirname(os.path.abspath(__file__)), 'avancar.sh')}"
+        )
+    else:
+        print(f"{toques} toque(s) detectado(s): o atalho funciona.")
+    return 0
+
+
 def esperar_avanco(cfg: argparse.Namespace, seco: bool = False) -> None:
     """Espera antes do no seguinte, conforme o modo de avanco escolhido.
 
@@ -1144,6 +1176,11 @@ def main(argv: list[str] | None = None) -> int:
         help="o mesmo que --avanco enter",
     )
     p.add_argument(
+        "--testar-gatilho",
+        action="store_true",
+        help="mostrar cada toque no ficheiro-gatilho e sair (testa o atalho)",
+    )
+    p.add_argument(
         "--ficheiro-avanco",
         default="~/.professor-avanca",
         help="ficheiro-gatilho do --avanco ficheiro",
@@ -1152,6 +1189,9 @@ def main(argv: list[str] | None = None) -> int:
         "--seco", action="store_true", help="ensaio: mostra o plano sem tocar na app"
     )
     cfg = p.parse_args(argv)
+
+    if cfg.testar_gatilho:
+        return testar_gatilho(cfg)
 
     if cfg.amostra:
         return amostrar_vozes(cfg.idioma, cfg.velocidade)

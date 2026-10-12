@@ -147,8 +147,18 @@ depende de nenhuma API do MindManager. Configuração, uma vez:
 4. corra `python3 mac/professor.py --avanco ficheiro` e use essa tecla para
    avançar, com a janela que quiser em primeiro plano.
 
-O script apenas toca o ficheiro `~/.professor-avanca`; o professor repara na
-mudança e passa ao nó seguinte. Para usar outro caminho:
+Para confirmar que o atalho dispara, **antes** de envolver o professor:
+
+```bash
+python3 mac/professor.py --testar-gatilho
+```
+
+Prima a tecla algumas vezes: cada toque aparece com a hora. Se não aparecer
+nada, o problema está no atalho e não no professor — a mensagem final indica o
+que verificar na aplicação Atalhos.
+
+O mecanismo é só este: o atalho toca o ficheiro `~/.professor-avanca` e o
+professor repara na mudança. Para usar outro caminho:
 `--ficheiro-avanco ~/outro`.
 
 ### Conduzir a partir do mapa, sem o Terminal
