@@ -586,37 +586,75 @@ class MotorAppleScript:
                 + (no.ident or "1")
             )
 
-    def ler_selecao(self) -> "No | None":
-        """O no seleccionado no mapa, para o modo que segue os seus cliques."""
-        guiao = (
-            "set s to selection of document %d\n"
-            'set t to ""\n'
-            'set n to ""\n'
-            'set i to ""\n'
-            "try\n"
-            "set t to (title of s) as text\n"
-            "set n to (level of s) as text\n"
-            "set i to (id of s) as text\n"
-            "end try\n"
-            'set nt to ""\n'
-            "try\n"
-            "set nt to (notes of s) as text\n"
-            "end try\n"
-            'return i & "%s" & n & "%s" & t & "%s" & nt'
-        ) % (self.documento, US, US, US)
+    def ler_selecao(self) -> "tuple[No | None, str]":
+        """O no seleccionado no mapa, e o que falhou (para nao esconder erros).
+
+        O `selection` do documento pode vir como lista de itens e nao como um
+        topico, por isso trata-se esse caso antes de ler as propriedades.
+        """
+        d, u = self.documento, US
+        guiao = "\n".join(
+            [
+                'set erro to ""',
+                'set classe to ""',
+                'set i to ""',
+                'set n to ""',
+                'set t to ""',
+                'set nt to ""',
+                "try",
+                f"set s to selection of document {d}",
+                "set classe to (class of s) as text",
+                "if class of s is list then",
+                "if (count of s) is 0 then",
+                f'return "" & "{u}" & classe & "{u}{u}{u}{u}"',
+                "end if",
+                "set s to item 1 of s",
+                "set classe to (class of s) as text",
+                "end if",
+                "set i to (id of s) as text",
+                "set t to (title of s) as text",
+                "try",
+                "set n to (level of s) as text",
+                "end try",
+                "try",
+                "set nt to (notes of s) as text",
+                "end try",
+                "on error e",
+                "set erro to e",
+                "end try",
+                f'return erro & "{u}" & classe & "{u}" & i & "{u}" & n'
+                f' & "{u}" & t & "{u}" & nt',
+            ]
+        )
+
         try:
             bruto = self._tell(guiao)
-        except SystemExit:
-            return None
-        campos = bruto.split(US)
-        if len(campos) < 4 or not campos[0].strip():
-            return None
-        ident, nivel, titulo, notas = (c.strip() for c in campos[:4])
-        return No(
-            texto=_limpar(titulo),
-            notas=_limpar(notas),
-            nivel=max(int(nivel or 1), 1),
-            ident=ident,
+        except SystemExit as falha:
+            return None, str(falha)
+
+        campos = [c.strip() for c in bruto.split(US)]
+        while len(campos) < 6:
+            campos.append("")
+        erro, classe, ident, nivel, titulo, notas = campos[:6]
+
+        if erro:
+            return None, f"{erro} (selection e do tipo {classe or 'desconhecido'})"
+        if not ident:
+            # Nada seleccionado: nao e erro, so nao ha nada para narrar.
+            return None, ""
+
+        try:
+            numero = max(int(nivel or 1), 1)
+        except ValueError:
+            numero = 1
+        return (
+            No(
+                texto=_limpar(titulo),
+                notas=_limpar(notas),
+                nivel=numero,
+                ident=ident,
+            ),
+            "",
         )
 
     def falar(self, texto: str, voz: str | None, velocidade: int) -> None:
@@ -898,9 +936,17 @@ def seguir_selecao(motor: MotorAppleScript, cfg: argparse.Namespace) -> None:
     motor.preparar()
 
     anterior = ""
+    avisado = False
     try:
         while True:
-            no = motor.ler_selecao()
+            no, falha = motor.ler_selecao()
+            if falha and not avisado:
+                avisado = True
+                print(
+                    f"  nao consegui ler a selecao: {falha}\n"
+                    "  Diga-me esta linha; entretanto use --manual (com o "
+                    "Terminal em foco)."
+                )
             if no is not None and no.ident and no.ident != anterior:
                 anterior = no.ident
                 print(f"  nivel {no.nivel}: {no.texto}")

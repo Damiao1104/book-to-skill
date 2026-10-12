@@ -139,6 +139,16 @@ nó **que você clicar** no mapa, com o zoom e o realce a acompanhar. Navegue co
 o rato ou com as setas do MindManager; `Ctrl+C` no Terminal termina. Para narrar
 sem mexer no zoom: `--sem-zoom-ao-seguir`.
 
+Se não reagir aos cliques, o professor diz o motivo na primeira tentativa. Para
+ver em detalhe o que a aplicação devolve:
+
+```bash
+osascript mac/testar_selecao.applescript
+```
+
+Observa 15 segundos: clique em vários nós no mapa e volte ao Terminal — cada
+linha mostra a classe, o nível, o título e o id do que estava seleccionado.
+
 O motor antigo, por teclado, fica disponível em `--motor teclado` para o caso de
 o AppleScript falhar.
 
