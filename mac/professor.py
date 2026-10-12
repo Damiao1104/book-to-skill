@@ -262,6 +262,55 @@ def resolver_mapa(indicado: str) -> str:
     return achados[int(escolha) - 1]
 
 
+VOGAIS = set("AEIOUÁÉÍÓÚÀÂÊÎÔÛÃÕÜ")
+
+# Palavras de ligacao: numa frase escrita toda em maiusculas sao parte do
+# texto, nao siglas, e sem isto a voz soletra "D, A".
+LIGACOES = {
+    "A", "AO", "AOS", "AS", "À", "ÀS", "COM", "DA", "DAS", "DE", "DO", "DOS",
+    "E", "EM", "ENTRE", "NA", "NAS", "NO", "NOS", "O", "OS", "OU", "PARA",
+    "PELA", "PELO", "POR", "SEM", "SOB", "SOBRE", "UM", "UMA",
+}
+
+_PALAVRA = r"[^\W\d_]+"
+
+
+def _e_maiusculas(palavra: str) -> bool:
+    return palavra == palavra.upper() and palavra != palavra.lower()
+
+
+def suavizar_maiusculas(texto: str, limite_sigla: int = 3) -> str:
+    """Converte PALAVRAS EM MAIUSCULAS para caixa normal, para a voz as ler.
+
+    As vozes do macOS tratam uma palavra toda em maiusculas como sigla e
+    soletram-na ("ATOS" -> "A, T, O, S"). Regras, por esta ordem:
+
+    - numa frase escrita toda em maiusculas, as palavras de ligacao (DE, DA,
+      E, ...) passam a minusculas, para nao serem soletradas;
+    - uma palavra em maiusculas com mais de `limite_sigla` letras **e** com
+      vogais passa a caixa de titulo: ATOS -> Atos, CESPE -> Cespe;
+    - o resto fica como esta, porque soletrar e o correcto: TI, CF, UML (curtas)
+      e HTML, CSS, SQL, BRB (sem vogais).
+
+    O texto mostrado no ecra nao e alterado — isto vale so para a narracao.
+    """
+    palavras = re.findall(_PALAVRA, texto)
+    em_maiusculas = [p for p in palavras if _e_maiusculas(p)]
+    frase_em_maiusculas = bool(em_maiusculas) and len(em_maiusculas) == len(palavras)
+
+    def converter(achado: "re.Match[str]") -> str:
+        p = achado.group(0)
+        if not _e_maiusculas(p):
+            return p
+        if frase_em_maiusculas and p in LIGACOES:
+            return p.lower()
+        if len(p) > limite_sigla and (set(p) & VOGAIS):
+            return p[0] + p[1:].lower()
+        return p
+
+    return re.sub(_PALAVRA, converter, texto)
+
+
 def falar_com_say(
     texto: str, voz: str | None, velocidade: int, seco: bool = False
 ) -> None:
@@ -317,8 +366,10 @@ class MotorAppleScript:
         self.avisos: set[str] = set()
 
     # -- infra-estrutura -------------------------------------------------
-    def _osascript(self, *args: str) -> str:
-        if self.seco:
+    def _osascript(self, *args: str, sempre: bool = False) -> str:
+        """Corre o osascript. Em ensaio (`--seco`) so corre o que nao altera
+        nada — ler a estrutura e inocuo, mexer no zoom e na cor nao."""
+        if self.seco and not sempre:
             print(f"    [seco] osascript {' '.join(args)[:120]}")
             return ""
         proc = subprocess.run(["osascript", *args], capture_output=True, text=True)
@@ -347,7 +398,7 @@ class MotorAppleScript:
 
     # -- leitura do mapa aberto ------------------------------------------
     def estrutura(self, guiao: str) -> list[No]:
-        bruto = self._osascript(guiao, str(self.documento))
+        bruto = self._osascript(guiao, str(self.documento), sempre=True)
         nos: list[No] = []
         for registo in bruto.split(RS):
             if not registo.strip(US).strip():
@@ -527,14 +578,48 @@ def escolher_voz(pedida: str | None, idioma: str = "pt_BR") -> str | None:
 # --------------------------------------------------------------------------
 # Apresentacao
 # --------------------------------------------------------------------------
-def frase(no: No, anunciar_nivel: bool, ler_notas: bool) -> str:
+def amostrar_vozes(idioma: str, velocidade: int) -> int:
+    """Diz uma frase com cada voz da regiao, para se poder escolher."""
+    vozes = [(n, r) for n, r in vozes_disponiveis() if r == idioma.replace("-", "_")]
+    if not vozes:
+        print(
+            f"Nao ha vozes {idioma} instaladas.\n"
+            "Instale em Definicoes do Sistema > Acessibilidade > Conteudo falado >\n"
+            "Voz do sistema > Gerir vozes (procure Portugues (Brasil) e prefira\n"
+            "as versoes Melhorada ou Premium, que soam muito menos roboticas)."
+        )
+        return 1
+
+    exemplo = (
+        "Este e o professor do mapa. Conceito: o ato administrativo "
+        "e manifestacao unilateral de vontade."
+    )
+    print(f"{len(vozes)} vozes {idioma}. Ouca e escolha com --voz:\n")
+    for nome, _ in vozes:
+        print(f'  --voz "{nome}"')
+        subprocess.run(
+            ["say", "-v", nome, "-r", str(velocidade), "--", f"{nome}. {exemplo}"],
+            check=False,
+        )
+    print(
+        "\nSe todas soarem roboticas, instale uma voz Melhorada/Premium em\n"
+        "Definicoes do Sistema > Acessibilidade > Conteudo falado > Voz do\n"
+        "sistema > Gerir vozes, e volte a correr --amostra."
+    )
+    return 0
+
+
+def frase(
+    no: No, anunciar_nivel: bool, ler_notas: bool, limite_sigla: int = 3
+) -> str:
+    """Texto a narrar para este no (o que se mostra no ecra fica intacto)."""
     partes = []
     if anunciar_nivel:
         partes.append("Tema central:" if no.nivel == 1 else f"Nivel {no.nivel}:")
-    partes.append(no.texto or "no sem texto")
+    partes.append(suavizar_maiusculas(no.texto, limite_sigla) or "no sem texto")
     texto = " ".join(partes)
     if ler_notas and no.notas:
-        texto += f". Nota: {no.notas}"
+        texto += f". Nota: {suavizar_maiusculas(no.notas, limite_sigla)}"
     return texto
 
 
@@ -567,7 +652,11 @@ def apresentar(nos: list[No], mac: Mac, cfg: argparse.Namespace) -> None:
             mac.teclas(teclas_entre(nos[indice - 1].caminho, no.caminho))
             mac.atalho(cfg.tecla_zoom_in, cfg.pulso)
 
-        mac.falar(frase(no, cfg.anunciar_nivel, cfg.notas), voz, cfg.velocidade)
+        mac.falar(
+            frase(no, cfg.anunciar_nivel, cfg.notas, cfg.limite_sigla),
+            voz,
+            cfg.velocidade,
+        )
         if cfg.manual and not mac.seco:
             try:
                 input("    Enter para o no seguinte (Ctrl+C para parar) ")
@@ -606,7 +695,11 @@ def apresentar_applescript(
                 cfg.passos,
                 cfg.pausa_passo,
             )
-            motor.falar(frase(no, cfg.anunciar_nivel, cfg.notas), voz, cfg.velocidade)
+            motor.falar(
+                frase(no, cfg.anunciar_nivel, cfg.notas, cfg.limite_sigla),
+                voz,
+                cfg.velocidade,
+            )
 
             if cfg.manual and not motor.seco:
                 try:
@@ -724,6 +817,19 @@ def main(argv: list[str] | None = None) -> int:
         help='nao dizer "Nivel N:" antes do texto',
     )
     p.add_argument(
+        "--limite-sigla",
+        type=int,
+        default=3,
+        help="palavras EM MAIUSCULAS com mais letras do que isto sao lidas como "
+        "palavra; as mais curtas ficam sigla (predefinicao: 3). Use 99 para "
+        "nunca converter",
+    )
+    p.add_argument(
+        "--amostra",
+        action="store_true",
+        help="dizer uma frase com cada voz da regiao e sair",
+    )
+    p.add_argument(
         "--manual",
         action="store_true",
         help="esperar pelo Enter antes de passar ao no seguinte (modo aula)",
@@ -732,6 +838,9 @@ def main(argv: list[str] | None = None) -> int:
         "--seco", action="store_true", help="ensaio: mostra o plano sem tocar na app"
     )
     cfg = p.parse_args(argv)
+
+    if cfg.amostra:
+        return amostrar_vozes(cfg.idioma, cfg.velocidade)
 
     if cfg.voz == "?":
         vozes = vozes_disponiveis()

@@ -58,6 +58,36 @@ Três particularidades da 13.1, verificadas na máquina e já tratadas no códig
   `select all`/`deselect all`), por isso o acompanhamento é feito com `reveal`
   mais o zoom, que é o que põe o nó no centro da vista.
 
+### Texto em maiúsculas
+
+As vozes do macOS tratam uma palavra toda em maiúsculas como sigla e soletram-na
+— `ATOS JURÍDICOS` sai "A, T, O, S". Como mapas de estudo usam muito as
+maiúsculas, a narração normaliza-as antes de falar (o que aparece no ecrã e no
+mapa não muda):
+
+- numa frase toda em maiúsculas, as palavras de ligação passam a minúsculas:
+  `SEGURANÇA DA INFORMAÇÃO` → "Segurança da Informação";
+- palavras com mais de `--limite-sigla` letras **e** com vogais passam a caixa de
+  título: `ATOS` → "Atos", `CESPE` → "Cespe";
+- o resto fica intacto, porque aí soletrar é o correcto: `TI`, `CF`, `UML`
+  (curtas) e `HTML`, `CSS`, `SQL`, `BRB` (sem vogais).
+
+### Escolher a voz
+
+A voz é escolhida pela região (`pt_BR` por omissão). Para ouvir as que tem e
+decidir:
+
+```bash
+python3 mac/professor.py --amostra          # diz uma frase com cada voz pt_BR
+python3 mac/professor.py --voz "Luciana"
+```
+
+As vozes antigas (Luciana, Joana) soam robóticas. Para uma voz muito melhor,
+instale a versão **Melhorada** ou **Premium** em *Definições do Sistema →
+Acessibilidade → Conteúdo falado → Voz do sistema → Gerir vozes*, escolhendo
+Português (Brasil); depois volte a correr `--amostra`. Também ajuda baixar o
+ritmo: `--velocidade 160`.
+
 ### Realce do nó em foco
 
 Como não há selecção por AppleScript, o nó em leitura é marcado pela cor de
@@ -166,6 +196,8 @@ começar onde o script espera.
 | `--cor-realce 255,220,130` | âmbar claro | Cor do realce, em `R,G,B` (0–255 ou 0–65535) |
 | `--voz Luciana` | melhor voz `pt_BR` | Voz do `say`; `--voz ?` lista as instaladas e marca a escolhida |
 | `--idioma pt_BR` | `pt_BR` | Região da voz. Use `pt_PT` para português de Portugal |
+| `--amostra` | — | Diz uma frase com cada voz da região, para escolher |
+| `--limite-sigla 3` | `3` | Palavras EM MAIÚSCULAS com mais letras do que isto são lidas como palavra; `99` desliga |
 | `--velocidade 180` | `180` | Palavras por minuto |
 | `--pulso 2` | `2` | Passos de zoom a afastar e a aproximar em cada mudança de nó (simétrico, por isso o zoom não "foge") |
 | `--zoom-inicial 2` | `2` | Aproximação aplicada no início e desfeita no fim |
@@ -205,6 +237,16 @@ Macros → Editor de Macros**, abrir o ficheiro e gravar. Fica com três macros:
 configuração está nas constantes no topo do ficheiro.
 
 ---
+
+## Testes
+
+```bash
+python3 testes/testar.py
+```
+
+Correm sem MindManager e cobrem o tratamento das maiúsculas, a leitura de
+`.mmap` (ordem, níveis, caminhos, notas de várias linhas), as teclas entre nós
+do motor de teclado (300 árvores aleatórias) e a conversão de cores do realce.
 
 ## O que foi verificado
 
