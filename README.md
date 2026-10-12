@@ -106,7 +106,38 @@ fundo (`fill color`), que é escrevível. O script:
   barra de título) e as mudanças entram na pilha de *desfazer*; feche sem gravar,
   ou faça `Cmd+Z`, e nada se altera no disco.
 
-Para desligar: `--sem-realce`. Para outra cor: `--cor-realce 180,220,255`.
+Formas de realce (`--realce`):
+
+| Modo | O que faz |
+|---|---|
+| `auto` (predefinição) | Cor de fundo **e** cor do texto — o fundo não se vê em estilos sem preenchimento, a cor do texto vê-se sempre |
+| `fundo` | Só a cor de fundo (`--cor-realce 180,220,255`) |
+| `texto` | Só a cor do texto (`--cor-texto 200,0,0`) |
+| `marcador` | Põe um marcador (*bookmark*) no nó |
+| `nenhum` | Não toca no documento |
+
+Se o realce não aparecer, o professor avisa uma vez e indica a sonda:
+
+```bash
+osascript mac/testar_realce.applescript 1.1
+```
+
+Ela aplica as quatro marcas à vez, dois segundos cada, reponde-as, e diz quais a
+aplicação aceitou — basta olhar para o mapa e ver qual aparece.
+
+### Conduzir a partir do mapa, sem o Terminal
+
+No `--manual` o `Enter` é lido pelo Terminal, logo é preciso tê-lo em primeiro
+plano. Para ficar dentro do MindManager:
+
+```bash
+python3 mac/professor.py --modo seguir
+```
+
+O professor lê `selection of document 1` a cada `--intervalo` segundos e narra o
+nó **que você clicar** no mapa, com o zoom e o realce a acompanhar. Navegue com
+o rato ou com as setas do MindManager; `Ctrl+C` no Terminal termina. Para narrar
+sem mexer no zoom: `--sem-zoom-ao-seguir`.
 
 O motor antigo, por teclado, fica disponível em `--motor teclado` para o caso de
 o AppleScript falhar.

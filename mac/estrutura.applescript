@@ -6,7 +6,7 @@
 -- caminhos continuam a contar a partir dele, para as referencias
 -- `subtopic N of ... of central topic` ficarem validas.
 -- Um registo por no, separado por <US>:
---    caminho <US> nivel <US> nome <US> notas
+--    caminho <US> nivel <US> nome <US> notas <US> id
 -- e os registos separados por <RS>. Usam-se estes separadores (e nao
 -- mudanca de linha) para as notas com varias linhas nao partirem o formato.
 -- caminho = indices 1-based separados por pontos; vazio no tema central.
@@ -58,7 +58,11 @@ on percorrer(oTopico, caminho, nivel)
 		-- Contentor de raiz sem titulo: nao se narra, so se percorre.
 		set saida to ""
 	else
-		set saida to caminho & US & (oNivel as text) & US & (oNome as text) & US & (asNotas as text) & RS
+		set oId to ""
+		try
+			set oId to (id of oTopico) as text
+		end try
+		set saida to caminho & US & (oNivel as text) & US & (oNome as text) & US & (asNotas as text) & US & oId & RS
 	end if
 
 	repeat with i from 1 to quantos

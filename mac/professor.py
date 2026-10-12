@@ -43,6 +43,9 @@ class No:
     notas: str = ""
     nivel: int = 1
     caminho: tuple[int, ...] = ()
+    # id do topico na aplicacao: permite enderecar o no directamente, em vez
+    # de o alcancar por `subtopic N of subtopic M of ...`.
+    ident: str = ""
     filhos: list["No"] = field(default_factory=list)
 
 
@@ -345,6 +348,25 @@ def cor_applescript(texto: str) -> str:
 RS, US = chr(30), chr(31)
 
 
+def props_realce(modo: str, cor_fundo: str, cor_texto: str) -> list[tuple[str, str]]:
+    """Propriedades a mexer em cada modo de realce: [(propriedade, valor)].
+
+    O `fill color` nem sempre se ve: muitos estilos do MindManager desenham os
+    topicos sem preenchimento, e a cor muda sem efeito visivel. Por isso o modo
+    `auto` mexe tambem na cor do texto, que se ve sempre.
+    """
+    fundo = ("fill color", cor_applescript(cor_fundo))
+    texto = ("text color", cor_applescript(cor_texto))
+    marcador = ("bookmark", "true")
+    return {
+        "auto": [fundo, texto],
+        "fundo": [fundo],
+        "texto": [texto],
+        "marcador": [marcador],
+        "nenhum": [],
+    }[modo]
+
+
 class MotorAppleScript:
     """Controla o MindManager pelo dicionario AppleScript da aplicacao.
 
@@ -358,10 +380,10 @@ class MotorAppleScript:
         self.documento = documento
         self.seco = seco
         self.zoom_inicial: int | None = None
-        # (referencia, cor original) do no actualmente realcado, para repor.
-        self.realcado: tuple[str, str] | None = None
-        self.cor_realce = "{65535, 58000, 35000}"
-        self.realce_activo = True
+        # (referencia, [(propriedade, valor original)]) do no realcado.
+        self.realcado: tuple[str, list[tuple[str, str]]] | None = None
+        # Propriedades a mexer para realcar: [(propriedade, valor novo)].
+        self.realce_props: list[tuple[str, str]] = []
         # Avisos ja mostrados, para nao repetir o mesmo em cada no.
         self.avisos: set[str] = set()
 
@@ -389,8 +411,18 @@ class MotorAppleScript:
             "-e", f'tell application "{self.app}"\n{corpo}\nend tell'
         )
 
-    def _ref(self, caminho: tuple[int, ...]) -> str:
-        """Referencia AppleScript do no: subtopic N of ... of central topic."""
+    def _ref(self, no: "No | tuple[int, ...]") -> str:
+        """Referencia AppleScript do no.
+
+        Prefere `topic id "..." of document N`, que a aplicacao aceita e e
+        imune a enganos de caminho; sem id, cai no caminho de subtopicos.
+        """
+        if isinstance(no, No):
+            if no.ident:
+                return f'topic id "{no.ident}" of document {self.documento}'
+            caminho = no.caminho
+        else:
+            caminho = no
         ref = f"central topic of document {self.documento}"
         for indice in caminho:
             ref = f"subtopic {indice + 1} of {ref}"
@@ -406,7 +438,8 @@ class MotorAppleScript:
             campos = registo.split(US)
             if len(campos) < 4:
                 continue
-            caminho_txt, nivel_txt, nome, notas = campos[0], campos[1], campos[2], campos[3]
+            caminho_txt, nivel_txt, nome, notas = campos[:4]
+            ident = campos[4].strip() if len(campos) > 4 else ""
             caminho = tuple(
                 int(p) - 1 for p in caminho_txt.strip().split(".") if p.strip()
             )
@@ -417,6 +450,7 @@ class MotorAppleScript:
                     notas=_limpar(notas),
                     nivel=max(nivel, 1),
                     caminho=caminho,
+                    ident=ident,
                 )
             )
         if not nos:
@@ -436,21 +470,58 @@ class MotorAppleScript:
         except ValueError:
             self.zoom_inicial = None
 
-    def focar(self, caminho: tuple[int, ...], panoramico: int, foco: int,
-              passos: int, pausa: float) -> None:
-        """Afasta, traz o no para a vista e aproxima — o pulso de cada mudanca.
+    def _realce(self, ref: str) -> tuple[list[str], list[str]]:
+        """Guioes para ler-e-aplicar o realce, e os nomes das variaveis usadas.
 
-        Com o realce ligado, repoe a cor do no anterior e pinta o actual,
-        devolvendo a cor original deste para a poder repor depois.
+        Cada propriedade e tratada a parte: le-se o valor actual para uma
+        variavel (para o poder repor) e so depois se escreve o novo.
         """
-        ref = self._ref(caminho)
-        linhas: list[str] = []
+        pedacos: list[str] = []
+        variaveis: list[str] = []
+        for indice, (propriedade, valor) in enumerate(self.realce_props):
+            var = f"v{indice}"
+            variaveis.append(var)
+            if valor.startswith("{"):
+                # Cor: so se mexe quando vem como lista RGB. Se o topico herda a
+                # cor do estilo do mapa, deixa-se como esta.
+                pedacos.append(
+                    f'set {var} to ""\n'
+                    "try\n"
+                    f"set c to {propriedade} of {ref}\n"
+                    "if class of c is list then\n"
+                    f'set {var} to "{{" & (item 1 of c as text) & ", " & '
+                    '(item 2 of c as text) & ", " & (item 3 of c as text) & "}"\n'
+                    f"set {propriedade} of {ref} to {valor}\n"
+                    "end if\n"
+                    "end try"
+                )
+            else:
+                pedacos.append(
+                    f'set {var} to ""\n'
+                    "try\n"
+                    f"set {var} to ({propriedade} of {ref}) as text\n"
+                    f"set {propriedade} of {ref} to {valor}\n"
+                    "end try"
+                )
+        return pedacos, variaveis
 
-        if self.realcado is not None:
-            ref_anterior, cor_anterior = self.realcado
-            linhas.append(
-                f"try\nset fill color of {ref_anterior} to {cor_anterior}\nend try"
-            )
+    def _repor_realce(self) -> list[str]:
+        if self.realcado is None:
+            return []
+        ref, valores = self.realcado
+        linhas = [
+            f"try\nset {propriedade} of {ref} to {valor}\nend try"
+            for propriedade, valor in valores
+            if valor
+        ]
+        self.realcado = None
+        return linhas
+
+    def focar(self, no: "No", panoramico: int, foco: int, passos: int,
+              pausa: float) -> None:
+        """Afasta, traz o no para a vista, realca-o e aproxima."""
+        ref = self._ref(no)
+        linhas: list[str] = self._repor_realce()
 
         linhas.append(f"zoom document {self.documento} to {panoramico}")
         # Expandir o no e preciso para os filhos ficarem visiveis; se a
@@ -467,20 +538,8 @@ class MotorAppleScript:
         # `reveal` que traz o no para a vista.
         linhas.append(f"reveal {ref}")
 
-        if self.realce_activo:
-            # So realcamos quando a cor vem como lista RGB; se o topico herda a
-            # cor do estilo, `fill color` nao e uma lista e deixamos como esta.
-            linhas.append(
-                "set anterior to \"\"\n"
-                "try\n"
-                f"set c to fill color of {ref}\n"
-                "if class of c is list then\n"
-                'set anterior to "{" & (item 1 of c as text) & ", " & '
-                '(item 2 of c as text) & ", " & (item 3 of c as text) & "}"\n'
-                f"set fill color of {ref} to {self.cor_realce}\n"
-                "end if\n"
-                "end try"
-            )
+        pedacos, variaveis = self._realce(ref)
+        linhas.extend(pedacos)
 
         for p in range(1, passos + 1):
             pct = panoramico + round((foco - panoramico) * p / passos)
@@ -488,29 +547,77 @@ class MotorAppleScript:
             if p < passos:
                 linhas.append(f"delay {pausa:.2f}")
 
-        if not self.realce_activo:
-            linhas.append('set anterior to ""')
-        linhas.append(f'return anterior & "{US}" & aviso')
+        devolver = " & ".join(
+            [f'"{US}" & '.join(variaveis)] if variaveis else ['""']
+        )
+        linhas.append(f'return {devolver} & "{US}" & aviso')
 
         bruto = self._tell("\n".join(linhas))
-        cor, _, aviso = bruto.partition(US)
-        cor, aviso = cor.strip(), aviso.strip()
-        self.realcado = (ref, cor) if (self.realce_activo and cor) else None
+        campos = bruto.split(US)
+        valores = [c.strip() for c in campos[: len(variaveis)]]
+        aviso = campos[len(variaveis)].strip() if len(campos) > len(variaveis) else ""
+
+        # Repor um valor com a forma errada escreveria lixo na propriedade,
+        # por isso so se guarda o que corresponde ao tipo esperado: uma lista
+        # RGB para as cores, true/false para as propriedades booleanas.
+        guardados: list[tuple[str, str]] = []
+        for (prop, novo), lido in zip(self.realce_props, valores):
+            if not lido:
+                continue
+            espera_cor = novo.startswith("{")
+            if espera_cor and not lido.startswith("{"):
+                continue
+            if not espera_cor and lido not in ("true", "false"):
+                continue
+            guardados.append((prop, lido))
+        self.realcado = (ref, guardados) if guardados else None
+
         if aviso and aviso not in self.avisos:
             self.avisos.add(aviso)
             print(f"    aviso: nao consegui expandir o no — {aviso}")
+        if self.realce_props and not guardados and "realce" not in self.avisos:
+            self.avisos.add("realce")
+            print(
+                "    aviso: nao consegui realcar o no (as propriedades vem do "
+                "estilo do mapa).\n"
+                "           Experimente --realce marcador ou --realce texto, ou"
+                " corra\n"
+                "           osascript mac/testar_realce.applescript "
+                + (no.ident or "1")
+            )
 
-    def restaurar(self) -> None:
-        """Repoe a cor do ultimo no realcado e o zoom inicial do documento."""
-        linhas: list[str] = []
-        if self.realcado is not None:
-            ref, cor = self.realcado
-            linhas.append(f"try\nset fill color of {ref} to {cor}\nend try")
-            self.realcado = None
-        if self.zoom_inicial is not None:
-            linhas.append(f"zoom document {self.documento} to {self.zoom_inicial}")
-        if linhas:
-            self._tell("\n".join(linhas))
+    def ler_selecao(self) -> "No | None":
+        """O no seleccionado no mapa, para o modo que segue os seus cliques."""
+        guiao = (
+            "set s to selection of document %d\n"
+            'set t to ""\n'
+            'set n to ""\n'
+            'set i to ""\n'
+            "try\n"
+            "set t to (title of s) as text\n"
+            "set n to (level of s) as text\n"
+            "set i to (id of s) as text\n"
+            "end try\n"
+            'set nt to ""\n'
+            "try\n"
+            "set nt to (notes of s) as text\n"
+            "end try\n"
+            'return i & "%s" & n & "%s" & t & "%s" & nt'
+        ) % (self.documento, US, US, US)
+        try:
+            bruto = self._tell(guiao)
+        except SystemExit:
+            return None
+        campos = bruto.split(US)
+        if len(campos) < 4 or not campos[0].strip():
+            return None
+        ident, nivel, titulo, notas = (c.strip() for c in campos[:4])
+        return No(
+            texto=_limpar(titulo),
+            notas=_limpar(notas),
+            nivel=max(int(nivel or 1), 1),
+            ident=ident,
+        )
 
     def falar(self, texto: str, voz: str | None, velocidade: int) -> None:
         falar_com_say(texto, voz, velocidade, seco=self.seco)
@@ -729,9 +836,14 @@ def apresentar_applescript(
 ) -> None:
     voz = escolher_voz(cfg.voz, cfg.idioma)
     print(f"Voz: {voz or 'predefinida do sistema'}   ({len(nos)} nos)")
-    motor.realce_activo = cfg.realce
-    motor.cor_realce = cor_applescript(cfg.cor_realce)
+    motor.realce_props = props_realce(cfg.realce, cfg.cor_realce, cfg.cor_texto)
     motor.preparar()
+    if cfg.manual:
+        print(
+            "O Enter e lido pelo Terminal, por isso a janela do Terminal tem de\n"
+            "estar em primeiro plano. Para conduzir a partir do mapa, use\n"
+            "  --modo seguir   (narra o no que clicar no MindManager)"
+        )
 
     try:
         for indice, no in enumerate(nos):
@@ -744,7 +856,7 @@ def apresentar_applescript(
             )
 
             motor.focar(
-                no.caminho,
+                no,
                 cfg.zoom_panoramico,
                 cfg.zoom_foco,
                 cfg.passos,
@@ -767,6 +879,48 @@ def apresentar_applescript(
         motor.falar("Fim do mapa.", voz, cfg.velocidade)
     finally:
         # Mesmo com Ctrl+C: a cor do no e o zoom voltam ao que estavam.
+        motor.restaurar()
+
+
+def seguir_selecao(motor: MotorAppleScript, cfg: argparse.Namespace) -> None:
+    """Narra o no que estiver seleccionado, sempre que a selecao mudar.
+
+    Assim conduz-se a sessao dentro do MindManager — com o rato ou as setas —
+    sem precisar de ter o Terminal em primeiro plano.
+    """
+    voz = escolher_voz(cfg.voz, cfg.idioma)
+    print(f"Voz: {voz or 'predefinida do sistema'}")
+    print(
+        "A seguir a sua selecao no MindManager. Clique num no para o ouvir;\n"
+        "Ctrl+C aqui no Terminal para terminar."
+    )
+    motor.realce_props = props_realce(cfg.realce, cfg.cor_realce, cfg.cor_texto)
+    motor.preparar()
+
+    anterior = ""
+    try:
+        while True:
+            no = motor.ler_selecao()
+            if no is not None and no.ident and no.ident != anterior:
+                anterior = no.ident
+                print(f"  nivel {no.nivel}: {no.texto}")
+                if cfg.zoom_ao_seguir:
+                    motor.focar(
+                        no,
+                        cfg.zoom_panoramico,
+                        cfg.zoom_foco,
+                        cfg.passos,
+                        cfg.pausa_passo,
+                    )
+                motor.falar(
+                    frase(no, cfg.anunciar_nivel, cfg.notas, cfg.limite_sigla),
+                    voz,
+                    cfg.velocidade,
+                )
+            time.sleep(cfg.intervalo)
+    except KeyboardInterrupt:
+        print()
+    finally:
         motor.restaurar()
 
 
@@ -808,21 +962,40 @@ def main(argv: list[str] | None = None) -> int:
     )
     p.add_argument("--documento", type=int, default=1, help="indice do mapa aberto")
     p.add_argument(
-        "--sem-realce",
-        dest="realce",
-        action="store_false",
-        help="nao pintar o no em foco (nao toca no documento)",
+        "--realce",
+        choices=("auto", "fundo", "texto", "marcador", "nenhum"),
+        default="auto",
+        help="como marcar o no em leitura: auto (fundo + cor do texto), fundo, "
+        "texto, marcador (bookmark) ou nenhum",
     )
     p.add_argument(
         "--cor-realce",
         default="255,220,130",
-        help="cor do realce em R,G,B (predefinicao: 255,220,130 — ambar claro)",
+        help="cor de fundo do realce em R,G,B (predefinicao: ambar claro)",
+    )
+    p.add_argument(
+        "--cor-texto",
+        default="200,0,0",
+        help="cor do texto do no em leitura em R,G,B (predefinicao: vermelho)",
+    )
+    p.add_argument(
+        "--intervalo",
+        type=float,
+        default=0.4,
+        help="segundos entre leituras da selecao no --modo seguir",
+    )
+    p.add_argument(
+        "--sem-zoom-ao-seguir",
+        dest="zoom_ao_seguir",
+        action="store_false",
+        help="no --modo seguir, narrar sem mexer no zoom",
     )
     p.add_argument(
         "--modo",
-        choices=("navegacao", "apresentacao", "listar"),
+        choices=("navegacao", "apresentacao", "listar", "seguir"),
         default="navegacao",
-        help="navegacao: setas + zoom por atalho (predefinicao, e o unico "
+        help="seguir: narra o no que clicar no mapa (conduz-se no MindManager); "
+        "navegacao: setas + zoom por atalho (predefinicao, e o unico "
         "que funciona no MindManager 13 para Mac); apresentacao: so avanca um "
         "passo por no, para versoes com modo de apresentacao/walk-through; "
         "listar: so mostra o indice dos nos",
@@ -905,6 +1078,10 @@ def main(argv: list[str] | None = None) -> int:
         escolhida = escolher_voz(None, cfg.idioma)
         for nome, regiao in vozes:
             print(f"{regiao}  {nome}" + ("   <-- escolhida" if nome == escolhida else ""))
+        return 0
+
+    if cfg.modo == "seguir":
+        seguir_selecao(MotorAppleScript(cfg.app, cfg.documento, seco=cfg.seco), cfg)
         return 0
 
     usar_applescript = cfg.motor == "applescript" and cfg.modo != "apresentacao"
