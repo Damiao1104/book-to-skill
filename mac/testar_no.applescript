@@ -24,6 +24,26 @@ on run argumentos
 	end tell
 	set end of r to "zoom inicial do documento: " & zInicial
 
+	-- O `central topic` da 13.1 e um contentor acima do tema central visivel.
+	tell application "MindManager"
+		set tRaiz to ""
+		try
+			set tRaiz to (title of central topic of document 1) as text
+		end try
+		set nRaiz to count of subtopics of central topic of document 1
+		set lRaiz to -1
+		try
+			set lRaiz to level of central topic of document 1
+		end try
+	end tell
+	if tRaiz is "" then
+		set end of r to "INFO   `central topic` e um contentor sem titulo (level " & ¬
+			lRaiz & ") com " & nRaiz & " topicos de raiz — nao se narra"
+	else
+		set end of r to "INFO   `central topic`: " & tRaiz & " (level " & lRaiz & ", " & ¬
+			nRaiz & " subtopicos)"
+	end if
+
 	-- Descer pelo caminho, tentando expandir cada no pelo meio.
 	set nivel to 1
 	repeat with ix in indices

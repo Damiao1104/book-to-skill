@@ -359,11 +359,12 @@ class MotorAppleScript:
             caminho = tuple(
                 int(p) - 1 for p in caminho_txt.strip().split(".") if p.strip()
             )
+            nivel = int(nivel_txt.strip() or len(caminho))
             nos.append(
                 No(
                     texto=_limpar(nome),
                     notas=_limpar(notas),
-                    nivel=int(nivel_txt.strip() or len(caminho) + 1),
+                    nivel=max(nivel, 1),
                     caminho=caminho,
                 )
             )
@@ -774,4 +775,12 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except BrokenPipeError:
+        # Saida cortada (por exemplo `| head`): sai em silencio.
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        sys.exit(0)
+    except KeyboardInterrupt:
+        print()
+        sys.exit(130)

@@ -43,7 +43,14 @@ endereçado por referência (`subtopic 2 of subtopic 1 of central topic`), não 
 preciso clicar no tema central antes de começar, nem há problema com ramos do
 lado esquerdo.
 
-Duas particularidades da 13.1, verificadas na máquina e já tratadas no código:
+Três particularidades da 13.1, verificadas na máquina e já tratadas no código:
+
+- **`central topic` não é o tema central visível** — é um contentor acima dele,
+  sem título, que tem os tópicos de raiz como subtópicos. Sem isto a hierarquia
+  fica desviada um nível e o primeiro "nó" da narração é um objecto invisível que
+  o `reveal` não mexe. O script não narra esse contentor, mas conta os caminhos a
+  partir dele para as referências continuarem válidas, e usa a propriedade
+  `level` da aplicação em vez de contar a profundidade;
 
 - o texto do nó está em `title`, não em `name` — `name` vem vazio na maioria dos
   tópicos, pelo que o script lê `title` primeiro;

@@ -1,4 +1,10 @@
 -- Despeja a estrutura do mapa aberto no MindManager.
+--
+-- Nota importante, verificada na 13.1: `central topic of document 1` nao e o
+-- tema central visivel — e um contentor acima dele, sem titulo, que tem os
+-- topicos de raiz como subtopicos. Esse contentor nao e narrado, mas os
+-- caminhos continuam a contar a partir dele, para as referencias
+-- `subtopic N of ... of central topic` ficarem validas.
 -- Um registo por no, separado por <US>:
 --    caminho <US> nivel <US> nome <US> notas
 -- e os registos separados por <RS>. Usam-se estes separadores (e nao
@@ -41,7 +47,19 @@ on percorrer(oTopico, caminho, nivel)
 		set quantos to count of subtopics of oTopico
 	end tell
 
-	set saida to caminho & US & (nivel as text) & US & (oNome as text) & US & (asNotas as text) & RS
+	-- O nivel vem da propriedade `level` da aplicacao, que e a verdade sobre a
+	-- profundidade; o contador local serve so de reserva.
+	set oNivel to nivel
+	try
+		tell application "MindManager" to set oNivel to level of oTopico
+	end try
+
+	if caminho is "" and oNome is "" then
+		-- Contentor de raiz sem titulo: nao se narra, so se percorre.
+		set saida to ""
+	else
+		set saida to caminho & US & (oNivel as text) & US & (oNome as text) & US & (asNotas as text) & RS
+	end if
 
 	repeat with i from 1 to quantos
 		if caminho is "" then
