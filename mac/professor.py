@@ -285,8 +285,9 @@ RS, US = chr(30), chr(31)
 class MotorAppleScript:
     """Controla o MindManager pelo dicionario AppleScript da aplicacao.
 
-    Usa os comandos `select`, `reveal` e `zoom <document> to <inteiro>`, pelo
-    que nao simula teclas nem depende da selecao inicial.
+    Usa os comandos `reveal` e `zoom <document> to <inteiro>`, pelo que nao
+    simula teclas nem depende da selecao inicial. (`select` existe no
+    dicionario mas a classe `topic` nao lhe responde na 13.1.)
     """
 
     def __init__(self, app: str, documento: int = 1, seco: bool = False):
@@ -369,7 +370,8 @@ class MotorAppleScript:
         ref = self._ref(caminho)
         linhas = [f"zoom document {self.documento} to {panoramico}"]
         linhas.append(f"try\nset collapsed of {ref} to false\nend try")
-        linhas.append(f"select {ref}")
+        # A classe `topic` nao responde a `select` (confirmado na 13.1): e o
+        # `reveal` que traz o no para a vista.
         linhas.append(f"reveal {ref}")
         for p in range(1, passos + 1):
             pct = panoramico + round((foco - panoramico) * p / passos)

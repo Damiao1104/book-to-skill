@@ -22,7 +22,16 @@ end run
 
 on percorrer(oTopico, caminho, nivel)
 	tell application "MindManager"
-		set oNome to name of oTopico
+		-- O texto do no vive em `title`; `name` vem vazio em muitos topicos.
+		set oNome to ""
+		try
+			set oNome to (title of oTopico) as text
+		end try
+		if oNome is "" then
+			try
+				set oNome to (name of oTopico) as text
+			end try
+		end if
 		if oNome is missing value then set oNome to ""
 		set asNotas to ""
 		try

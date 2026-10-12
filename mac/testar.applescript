@@ -29,10 +29,32 @@ on run
 	end try
 
 	try
-		tell application "MindManager" to set t to name of central topic of document 1
-		set end of r to "OK     tema central: " & t
+		tell application "MindManager" to set t to (title of central topic of document 1) as text
+		if t is "" then
+			set end of r to "ATENCAO  title do tema central esta vazio"
+		else
+			set end of r to "OK     title do tema central: " & t
+		end if
 	on error e
-		set end of r to "FALHA  central topic: " & e
+		set end of r to "FALHA  title: " & e
+	end try
+
+	try
+		tell application "MindManager" to set t2 to (name of central topic of document 1) as text
+		set end of r to "INFO   name do tema central: \"" & t2 & "\" (vazio e normal)"
+	on error e
+		set end of r to "INFO   name indisponivel: " & e
+	end try
+
+	try
+		tell application "MindManager" to set nt to notes of central topic of document 1
+		if nt is missing value or nt is "" then
+			set end of r to "INFO   tema central sem notas"
+		else
+			set end of r to "OK     notas legiveis (" & (length of (nt as text)) & " caracteres)"
+		end if
+	on error e
+		set end of r to "FALHA  notes: " & e
 	end try
 
 	try
@@ -64,13 +86,6 @@ on run
 	end try
 
 	try
-		tell application "MindManager" to select central topic of document 1
-		set end of r to "OK     select do tema central"
-	on error e
-		set end of r to "FALHA  select: " & e
-	end try
-
-	try
 		tell application "MindManager" to reveal central topic of document 1
 		set end of r to "OK     reveal do tema central"
 	on error e
@@ -81,15 +96,21 @@ on run
 		tell application "MindManager"
 			if (count of subtopics of central topic of document 1) > 0 then
 				set oSub to subtopic 1 of central topic of document 1
-				select oSub
 				reveal oSub
-				set end of r to "OK     select+reveal de um subtopico: " & (name of oSub)
+				set end of r to "OK     reveal de um subtopico: " & ((title of oSub) as text)
 			else
 				set end of r to "ATENCAO  o mapa nao tem subtopicos para testar"
 			end if
 		end tell
 	on error e
-		set end of r to "FALHA  select de subtopico: " & e
+		set end of r to "FALHA  reveal de subtopico: " & e
+	end try
+
+	try
+		tell application "MindManager" to set sel to selection of document 1
+		set end of r to "INFO   selecao depois do reveal: " & (class of sel as text)
+	on error e
+		set end of r to "INFO   selection indisponivel: " & e
 	end try
 
 	try

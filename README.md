@@ -28,19 +28,28 @@ O que isto implica, confirmado antes de escrever o código:
 
 A versão Mac do MindManager não tem editor de macros, mas **a 13.1 tem dicionário
 AppleScript** (`MindManagerSuite.sdef`), confirmado na máquina: expõe
-`select`, `reveal`, `zoom <document> to <inteiro>`, `zoom level`,
-`central topic`, `subtopic`, `name`, `notes` e `collapsed`. O professor usa isso
+`reveal`, `zoom <document> to <inteiro>`, `zoom level`, `central topic`,
+`subtopic`, `title`, `notes` e `collapsed`. O professor usa isso
 — comandos directos, sem simular teclas:
 
 1. lê a estrutura do **mapa aberto na aplicação** (ou de um ficheiro `.mmap`, se
    indicar um);
-2. em cada nó: afasta o zoom, selecciona o nó, trá-lo à vista com `reveal` e
-   aproxima em passos até à percentagem de foco;
+2. em cada nó: afasta o zoom, trá-lo à vista com `reveal` e aproxima em passos
+   até à percentagem de foco;
 3. narra o texto e as notas com a voz do macOS.
 
 Como o zoom é dado em percentagem exacta, não há deriva; e como o nó é
-selecionado por referência, não é preciso clicar no tema central antes de
-começar, nem há problema com ramos do lado esquerdo.
+endereçado por referência (`subtopic 2 of subtopic 1 of central topic`), não é
+preciso clicar no tema central antes de começar, nem há problema com ramos do
+lado esquerdo.
+
+Duas particularidades da 13.1, verificadas na máquina e já tratadas no código:
+
+- o texto do nó está em `title`, não em `name` — `name` vem vazio na maioria dos
+  tópicos, pelo que o script lê `title` primeiro;
+- a classe `topic` **não responde a `select`** (só o documento tem
+  `select all`/`deselect all`), por isso o acompanhamento é feito com `reveal`
+  mais o zoom, que é o que põe o nó no centro da vista.
 
 O motor antigo, por teclado, fica disponível em `--motor teclado` para o caso de
 o AppleScript falhar.

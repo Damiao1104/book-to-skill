@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+diagnostico.txt
+dicionario.txt
+listar.txt
+exemplo.mmap
