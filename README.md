@@ -125,6 +125,32 @@ osascript mac/testar_realce.applescript 1.1
 Ela aplica as quatro marcas à vez, dois segundos cada, reponde-as, e diz quais a
 aplicação aceitou — basta olhar para o mapa e ver qual aparece.
 
+### Caminhos alternativos para conduzir a sessão
+
+Quatro formas, da que exige menos à que exige mais da aplicação:
+
+| Caminho | Comando | Precisa de |
+|---|---|---|
+| **Corrido**, sem interacção | `python3 mac/professor.py --pausa 1.5` | nada; só arrancar |
+| **Enter no Terminal** | `python3 mac/professor.py --manual` | o Terminal em primeiro plano |
+| **Tecla global** | `python3 mac/professor.py --avanco ficheiro` | um atalho de teclado (abaixo); funciona com o MindManager em foco |
+| **Seguir os cliques** | `python3 mac/professor.py --modo seguir` | o `selection` da aplicação responder |
+
+A tecla global é a opção mais prática para dar aula a olhar para o mapa, e não
+depende de nenhuma API do MindManager. Configuração, uma vez:
+
+1. abra a aplicação **Atalhos** (Shortcuts) → novo atalho;
+2. acção **Executar Script de Shell** com o conteúdo:
+   `bash ~/book-to-skill/mac/avancar.sh`
+3. nos detalhes do atalho, atribua uma **tecla de atalho** (por exemplo
+   `⌃⌥→`);
+4. corra `python3 mac/professor.py --avanco ficheiro` e use essa tecla para
+   avançar, com a janela que quiser em primeiro plano.
+
+O script apenas toca o ficheiro `~/.professor-avanca`; o professor repara na
+mudança e passa ao nó seguinte. Para usar outro caminho:
+`--ficheiro-avanco ~/outro`.
+
 ### Conduzir a partir do mapa, sem o Terminal
 
 No `--manual` o `Enter` é lido pelo Terminal, logo é preciso tê-lo em primeiro
@@ -252,7 +278,9 @@ começar onde o script espera.
 | `--inicio 12` | `1` | Começar no nó número N (o número vem do `--modo listar`) |
 | `--sem-notas` | — | Não ler as notas |
 | `--sem-nivel` | — | Não dizer "Nível N:" antes do texto |
-| `--manual` | — | Esperar pelo `Enter` antes de passar ao nó seguinte (modo aula) |
+| `--avanco tempo` | `tempo` | Como avançar: `tempo`, `enter` (Terminal em foco) ou `ficheiro` (tecla global) |
+| `--manual` | — | O mesmo que `--avanco enter` |
+| `--ficheiro-avanco` | `~/.professor-avanca` | Ficheiro-gatilho do `--avanco ficheiro` |
 | `--app "MindManager"` | `MindManager` | Nome da aplicação, se o seu for diferente |
 | `--seco` | — | Ensaio: imprime o plano sem tocar na aplicação |
 

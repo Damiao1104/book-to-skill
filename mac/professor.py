@@ -808,6 +808,37 @@ def amostrar_vozes(idioma: str, velocidade: int) -> int:
     return 0
 
 
+def esperar_avanco(cfg: argparse.Namespace, seco: bool = False) -> None:
+    """Espera antes do no seguinte, conforme o modo de avanco escolhido.
+
+    - tempo: a pausa configurada, sem interacao;
+    - enter: o Enter no Terminal (exige o Terminal em primeiro plano);
+    - ficheiro: ate um ficheiro-gatilho ser tocado, o que permite usar um
+      atalho de teclado global e ficar com o MindManager em foco.
+    """
+    if seco:
+        return
+
+    if cfg.avanco == "enter":
+        try:
+            input("    Enter para o no seguinte (Ctrl+C para parar) ")
+        except EOFError:
+            cfg.avanco = "tempo"
+        return
+
+    if cfg.avanco == "ficheiro":
+        caminho = os.path.expanduser(cfg.ficheiro_avanco)
+        inicial = os.path.getmtime(caminho) if os.path.exists(caminho) else None
+        print(f"    a espera do gatilho ({caminho})")
+        while True:
+            time.sleep(0.2)
+            actual = os.path.getmtime(caminho) if os.path.exists(caminho) else None
+            if actual != inicial:
+                return
+
+    time.sleep(cfg.pausa)
+
+
 def frase(
     no: No, anunciar_nivel: bool, ler_notas: bool, limite_sigla: int = 3
 ) -> str:
@@ -856,13 +887,7 @@ def apresentar(nos: list[No], mac: Mac, cfg: argparse.Namespace) -> None:
             voz,
             cfg.velocidade,
         )
-        if cfg.manual and not mac.seco:
-            try:
-                input("    Enter para o no seguinte (Ctrl+C para parar) ")
-            except EOFError:
-                cfg.manual = False
-        elif not mac.seco:
-            time.sleep(cfg.pausa)
+        esperar_avanco(cfg, seco=mac.seco)
 
     mac.falar("Fim do mapa.", voz, cfg.velocidade)
     if cfg.modo == "navegacao" and cfg.zoom_inicial:
@@ -876,11 +901,18 @@ def apresentar_applescript(
     print(f"Voz: {voz or 'predefinida do sistema'}   ({len(nos)} nos)")
     motor.realce_props = props_realce(cfg.realce, cfg.cor_realce, cfg.cor_texto)
     motor.preparar()
-    if cfg.manual:
+    if cfg.avanco == "enter":
         print(
-            "O Enter e lido pelo Terminal, por isso a janela do Terminal tem de\n"
-            "estar em primeiro plano. Para conduzir a partir do mapa, use\n"
-            "  --modo seguir   (narra o no que clicar no MindManager)"
+            "O Enter e lido pelo Terminal, logo o Terminal tem de estar em\n"
+            "primeiro plano. Para conduzir com o MindManager em foco:\n"
+            "  --avanco ficheiro   (uma tecla global toca o ficheiro-gatilho)\n"
+            "  --modo seguir       (narra o no que clicar no mapa)"
+        )
+    elif cfg.avanco == "ficheiro":
+        print(
+            "Avanco por gatilho: ligue um atalho de teclado global a\n"
+            f"  bash {os.path.join(os.path.dirname(os.path.abspath(__file__)), 'avancar.sh')}\n"
+            "(ver a seccao «Caminhos alternativos» do README)."
         )
 
     try:
@@ -906,13 +938,7 @@ def apresentar_applescript(
                 cfg.velocidade,
             )
 
-            if cfg.manual and not motor.seco:
-                try:
-                    input("    Enter para o no seguinte (Ctrl+C para parar) ")
-                except EOFError:
-                    cfg.manual = False
-            elif not motor.seco:
-                time.sleep(cfg.pausa)
+            esperar_avanco(cfg, seco=motor.seco)
 
         motor.falar("Fim do mapa.", voz, cfg.velocidade)
     finally:
@@ -1104,9 +1130,23 @@ def main(argv: list[str] | None = None) -> int:
         help="dizer uma frase com cada voz da regiao e sair",
     )
     p.add_argument(
+        "--avanco",
+        choices=("tempo", "enter", "ficheiro"),
+        default="tempo",
+        help="como passar ao no seguinte: tempo (a pausa configurada), enter "
+        "(Terminal em foco) ou ficheiro (gatilho tocado por um atalho global)",
+    )
+    p.add_argument(
         "--manual",
-        action="store_true",
-        help="esperar pelo Enter antes de passar ao no seguinte (modo aula)",
+        dest="avanco",
+        action="store_const",
+        const="enter",
+        help="o mesmo que --avanco enter",
+    )
+    p.add_argument(
+        "--ficheiro-avanco",
+        default="~/.professor-avanca",
+        help="ficheiro-gatilho do --avanco ficheiro",
     )
     p.add_argument(
         "--seco", action="store_true", help="ensaio: mostra o plano sem tocar na app"
