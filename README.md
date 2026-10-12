@@ -34,8 +34,8 @@ AppleScript** (`MindManagerSuite.sdef`), confirmado na máquina: expõe
 
 1. lê a estrutura do **mapa aberto na aplicação** (ou de um ficheiro `.mmap`, se
    indicar um);
-2. em cada nó: afasta o zoom, trá-lo à vista com `reveal` e aproxima em passos
-   até à percentagem de foco;
+2. em cada nó: afasta o zoom, trá-lo à vista com `reveal`, **pinta-o** para se
+   ver qual está a ser lido, e aproxima em passos até à percentagem de foco;
 3. narra o texto e as notas com a voz do macOS.
 
 Como o zoom é dado em percentagem exacta, não há deriva; e como o nó é
@@ -50,6 +50,21 @@ Duas particularidades da 13.1, verificadas na máquina e já tratadas no código
 - a classe `topic` **não responde a `select`** (só o documento tem
   `select all`/`deselect all`), por isso o acompanhamento é feito com `reveal`
   mais o zoom, que é o que põe o nó no centro da vista.
+
+### Realce do nó em foco
+
+Como não há selecção por AppleScript, o nó em leitura é marcado pela cor de
+fundo (`fill color`), que é escrevível. O script:
+
+- guarda a cor original de cada nó antes de pintar e repõe-na ao sair dele;
+- repõe também o último nó **no fim e se interromper com `Ctrl+C`**;
+- só pinta quando o nó tem cor própria em RGB — se herdar a cor do estilo do
+  mapa, deixa-o como está, para não alterar o aspecto do mapa;
+- **nunca grava o ficheiro.** O mapa fica marcado como modificado (o ponto na
+  barra de título) e as mudanças entram na pilha de *desfazer*; feche sem gravar,
+  ou faça `Cmd+Z`, e nada se altera no disco.
+
+Para desligar: `--sem-realce`. Para outra cor: `--cor-realce 180,220,255`.
 
 O motor antigo, por teclado, fica disponível em `--motor teclado` para o caso de
 o AppleScript falhar.
@@ -140,6 +155,8 @@ começar onde o script espera.
 | `--zoom-panoramico 75` | `75` | Percentagem entre nós, antes de aproximar |
 | `--passos 6` | `6` | Passos da animação de zoom |
 | `--documento 1` | `1` | Qual dos mapas abertos usar |
+| `--sem-realce` | — | Não pintar o nó em foco (não toca no documento) |
+| `--cor-realce 255,220,130` | âmbar claro | Cor do realce, em `R,G,B` (0–255 ou 0–65535) |
 | `--voz Joana` | voz portuguesa, se existir | Voz do `say`; `--voz ?` lista as instaladas |
 | `--velocidade 180` | `180` | Palavras por minuto |
 | `--pulso 2` | `2` | Passos de zoom a afastar e a aproximar em cada mudança de nó (simétrico, por isso o zoom não "foge") |

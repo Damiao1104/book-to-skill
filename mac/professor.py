@@ -279,6 +279,20 @@ def falar_com_say(
     subprocess.run(comando, check=False)
 
 
+def cor_applescript(texto: str) -> str:
+    """Converte "R,G,B" (0-255 ou 0-65535) na lista RGB do AppleScript."""
+    try:
+        partes = [int(p) for p in texto.replace(";", ",").split(",")]
+    except ValueError:
+        raise SystemExit(f'Cor invalida: "{texto}". Use R,G,B (ex.: 255,220,130).')
+    if len(partes) != 3:
+        raise SystemExit(f'Cor invalida: "{texto}". Use tres valores R,G,B.')
+    if max(partes) <= 255:
+        partes = [round(v * 65535 / 255) for v in partes]
+    partes = [max(0, min(65535, v)) for v in partes]
+    return "{" + ", ".join(str(v) for v in partes) + "}"
+
+
 RS, US = chr(30), chr(31)
 
 
@@ -295,6 +309,10 @@ class MotorAppleScript:
         self.documento = documento
         self.seco = seco
         self.zoom_inicial: int | None = None
+        # (referencia, cor original) do no actualmente realcado, para repor.
+        self.realcado: tuple[str, str] | None = None
+        self.cor_realce = "{65535, 58000, 35000}"
+        self.realce_activo = True
 
     # -- infra-estrutura -------------------------------------------------
     def _osascript(self, *args: str) -> str:
@@ -366,23 +384,64 @@ class MotorAppleScript:
 
     def focar(self, caminho: tuple[int, ...], panoramico: int, foco: int,
               passos: int, pausa: float) -> None:
-        """Afasta, seleciona o no e aproxima — o pulso de zoom de cada mudanca."""
+        """Afasta, traz o no para a vista e aproxima — o pulso de cada mudanca.
+
+        Com o realce ligado, repoe a cor do no anterior e pinta o actual,
+        devolvendo a cor original deste para a poder repor depois.
+        """
         ref = self._ref(caminho)
-        linhas = [f"zoom document {self.documento} to {panoramico}"]
+        linhas: list[str] = []
+
+        if self.realcado is not None:
+            ref_anterior, cor_anterior = self.realcado
+            linhas.append(
+                f"try\nset fill color of {ref_anterior} to {cor_anterior}\nend try"
+            )
+
+        linhas.append(f"zoom document {self.documento} to {panoramico}")
         linhas.append(f"try\nset collapsed of {ref} to false\nend try")
         # A classe `topic` nao responde a `select` (confirmado na 13.1): e o
         # `reveal` que traz o no para a vista.
         linhas.append(f"reveal {ref}")
+
+        if self.realce_activo:
+            # So realcamos quando a cor vem como lista RGB; se o topico herda a
+            # cor do estilo, `fill color` nao e uma lista e deixamos como esta.
+            linhas.append(
+                "set anterior to \"\"\n"
+                "try\n"
+                f"set c to fill color of {ref}\n"
+                "if class of c is list then\n"
+                'set anterior to "{" & (item 1 of c as text) & ", " & '
+                '(item 2 of c as text) & ", " & (item 3 of c as text) & "}"\n'
+                f"set fill color of {ref} to {self.cor_realce}\n"
+                "end if\n"
+                "end try"
+            )
+
         for p in range(1, passos + 1):
             pct = panoramico + round((foco - panoramico) * p / passos)
             linhas.append(f"zoom document {self.documento} to {pct}")
             if p < passos:
                 linhas.append(f"delay {pausa:.2f}")
-        self._tell("\n".join(linhas))
+
+        if self.realce_activo:
+            linhas.append("return anterior")
+
+        saida = self._tell("\n".join(linhas)).strip()
+        self.realcado = (ref, saida) if (self.realce_activo and saida) else None
 
     def restaurar(self) -> None:
+        """Repoe a cor do ultimo no realcado e o zoom inicial do documento."""
+        linhas: list[str] = []
+        if self.realcado is not None:
+            ref, cor = self.realcado
+            linhas.append(f"try\nset fill color of {ref} to {cor}\nend try")
+            self.realcado = None
         if self.zoom_inicial is not None:
-            self._tell(f"zoom document {self.documento} to {self.zoom_inicial}")
+            linhas.append(f"zoom document {self.documento} to {self.zoom_inicial}")
+        if linhas:
+            self._tell("\n".join(linhas))
 
     def falar(self, texto: str, voz: str | None, velocidade: int) -> None:
         falar_com_say(texto, voz, velocidade, seco=self.seco)
@@ -475,33 +534,41 @@ def apresentar_applescript(
     nos: list[No], motor: MotorAppleScript, cfg: argparse.Namespace
 ) -> None:
     voz = escolher_voz(cfg.voz)
+    motor.realce_activo = cfg.realce
+    motor.cor_realce = cor_applescript(cfg.cor_realce)
     motor.preparar()
 
-    for indice, no in enumerate(nos):
-        if indice + 1 < cfg.inicio:
-            continue
-        rotulo = ".".join(str(p + 1) for p in no.caminho) or "1"
-        print(f"[{indice + 1}/{len(nos)}] {rotulo} {'  ' * (no.nivel - 1)}{no.texto}")
+    try:
+        for indice, no in enumerate(nos):
+            if indice + 1 < cfg.inicio:
+                continue
+            rotulo = ".".join(str(p + 1) for p in no.caminho) or "1"
+            print(
+                f"[{indice + 1}/{len(nos)}] {rotulo} "
+                f"{'  ' * (no.nivel - 1)}{no.texto}"
+            )
 
-        motor.focar(
-            no.caminho,
-            cfg.zoom_panoramico,
-            cfg.zoom_foco,
-            cfg.passos,
-            cfg.pausa_passo,
-        )
-        motor.falar(frase(no, cfg.anunciar_nivel, cfg.notas), voz, cfg.velocidade)
+            motor.focar(
+                no.caminho,
+                cfg.zoom_panoramico,
+                cfg.zoom_foco,
+                cfg.passos,
+                cfg.pausa_passo,
+            )
+            motor.falar(frase(no, cfg.anunciar_nivel, cfg.notas), voz, cfg.velocidade)
 
-        if cfg.manual and not motor.seco:
-            try:
-                input("    Enter para o no seguinte (Ctrl+C para parar) ")
-            except EOFError:
-                cfg.manual = False
-        elif not motor.seco:
-            time.sleep(cfg.pausa)
+            if cfg.manual and not motor.seco:
+                try:
+                    input("    Enter para o no seguinte (Ctrl+C para parar) ")
+                except EOFError:
+                    cfg.manual = False
+            elif not motor.seco:
+                time.sleep(cfg.pausa)
 
-    motor.falar("Fim do mapa.", voz, cfg.velocidade)
-    motor.restaurar()
+        motor.falar("Fim do mapa.", voz, cfg.velocidade)
+    finally:
+        # Mesmo com Ctrl+C: a cor do no e o zoom voltam ao que estavam.
+        motor.restaurar()
 
 
 def listar(nos: list[No]) -> None:
@@ -541,6 +608,17 @@ def main(argv: list[str] | None = None) -> int:
         "--pausa-passo", type=float, default=0.05, help="segundos por passo de zoom"
     )
     p.add_argument("--documento", type=int, default=1, help="indice do mapa aberto")
+    p.add_argument(
+        "--sem-realce",
+        dest="realce",
+        action="store_false",
+        help="nao pintar o no em foco (nao toca no documento)",
+    )
+    p.add_argument(
+        "--cor-realce",
+        default="255,220,130",
+        help="cor do realce em R,G,B (predefinicao: 255,220,130 — ambar claro)",
+    )
     p.add_argument(
         "--modo",
         choices=("navegacao", "apresentacao", "listar"),
