@@ -125,7 +125,20 @@ osascript mac/testar_realce.applescript 1.1
 Ela aplica as quatro marcas à vez, dois segundos cada, repõe-as, e diz quais a
 aplicação aceitou — basta olhar para o mapa e ver qual aparece. Num mapa de
 estudo típico (medido na 13.1), a cor do texto e a cor da linha vêm do estilo e
-não são alteráveis; a cor de fundo e o marcador funcionam.
+não são alteráveis; **a cor de fundo e o marcador funcionam e vêem-se** — foi
+assim que se chegou à predefinição `auto`.
+
+### Atalho para o uso diário
+
+```bash
+bash mac/aula.sh                 # mapa aberto, voz Luciana, tecla global
+bash mac/aula.sh --inicio 120    # retomar num nó
+bash mac/aula.sh --sem-notas     # só a estrutura
+```
+
+Junta as opções que ficaram verificadas neste Mac (voz Luciana a 160
+palavras/minuto, avanço pela tecla global, realce `auto`). Qualquer opção que
+acrescente sobrepõe-se a essas.
 
 ### Caminhos alternativos para conduzir a sessão
 
