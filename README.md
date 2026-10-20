@@ -319,7 +319,13 @@ Para parar a meio: `Ctrl+C` no Terminal.
 
 ### Se o zoom ou a navegação não responderem
 
-Corra o diagnóstico — junta num só relatório a versão instalada, se a aplicação
+**Confirme primeiro a vista.** Na vista de estrutura (`Cmd+O`) o zoom e o
+`reveal` são aceites pela aplicação e **não se vê nada mexer** — parece uma
+falha do controlo e não é. Prima `Cmd+U` no MindManager para voltar à Vista de
+Mapa. O dicionário não expõe a vista activa, por isso o script não a consegue
+detectar nem corrigir.
+
+Se já estava na vista de mapa, corra o diagnóstico — junta num só relatório a versão instalada, se a aplicação
 traz dicionário AppleScript (o que permitiria controlo directo, em vez de
 teclas), os menus com os atalhos reais e as vozes instaladas:
 
