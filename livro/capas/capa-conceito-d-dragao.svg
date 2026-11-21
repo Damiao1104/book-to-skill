@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 849" width="600" height="849" font-family="'DejaVu Sans', Arial, sans-serif">
+  <defs>
+    <linearGradient id="bgD" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07140f"/><stop offset="0.5" stop-color="#0a1620"/><stop offset="1" stop-color="#140f24"/>
+    </linearGradient>
+    <radialGradient id="glowK" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#16a085" stop-opacity="0.35"/><stop offset="1" stop-color="#16a085" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowI" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#8e44ad" stop-opacity="0.33"/><stop offset="1" stop-color="#8e44ad" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="horn" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#1fb496"/><stop offset="1" stop-color="#0a2a25"/>
+    </linearGradient>
+    <linearGradient id="accentD" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1fb496"/><stop offset="1" stop-color="#8e44ad"/>
+    </linearGradient>
+    <radialGradient id="eyeG" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#eafffb"/><stop offset="0.6" stop-color="#48e0c4"/><stop offset="1" stop-color="#0f6353"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="600" height="849" fill="url(#bgD)"/>
+  <circle cx="210" cy="295" r="260" fill="url(#glowK)"/>
+  <circle cx="470" cy="275" r="240" fill="url(#glowI)"/>
+
+  <text x="300" y="86" text-anchor="middle" fill="#7fb0a2" font-size="14" letter-spacing="7">DA REDE AO MODELO · KALI → IA</text>
+
+  <!-- ===================== DRAGÃO LOW-POLY ===================== -->
+
+  <!-- chifres (varridos para trás, curvos) -->
+  <path d="M346,252 Q396,226 452,208 Q422,246 364,274 Z" fill="#0d3f39" stroke="#0a1722" stroke-width="1"/>
+  <path d="M330,238 Q398,194 476,166 Q450,208 356,252 Z" fill="url(#horn)" stroke="#0a1722" stroke-width="1"/>
+  <path d="M338,240 Q400,200 468,170" fill="none" stroke="#2fd0ad" stroke-width="1.4" opacity="0.7"/>
+
+  <!-- farpas da nuca (começam a dissolução) -->
+  <polygon points="356,266 372,247 381,270" fill="#4a5aa0" stroke="#0a1722" stroke-width="0.8"/>
+  <polygon points="356,266 385,259 372,283" fill="#8e44ad" stroke="#0a1722" stroke-width="0.8" opacity="0.9"/>
+  <polygon points="366,300 389,296 378,319" fill="#6e3f94" stroke="#0a1722" stroke-width="0.8"/>
+
+  <!-- facetas da cabeça -->
+  <g stroke="#0a1722" stroke-width="1" stroke-linejoin="round">
+    <!-- focinho (lado Kali, verde) -->
+    <polygon points="115,298 170,280 185,300" fill="#17917a"/>
+    <polygon points="115,298 185,300 140,310" fill="#0f6353"/>
+    <polygon points="140,310 185,300 175,320" fill="#0d5547"/>
+    <polygon points="185,300 170,280 205,278" fill="#1fb496"/>
+    <polygon points="185,300 205,278 238,266" fill="#17917a"/>
+    <polygon points="185,300 238,266 268,285" fill="#159079"/>
+    <polygon points="185,300 268,285 175,320" fill="#0f6353"/>
+    <polygon points="175,320 268,285 240,342" fill="#0d5547"/>
+    <!-- face / testa (azul) -->
+    <polygon points="238,266 260,244 268,285" fill="#2a7fb0"/>
+    <polygon points="260,244 300,258 268,285" fill="#2980b9"/>
+    <polygon points="260,244 284,250 300,258" fill="#3a93c9"/>
+    <polygon points="284,250 312,230 300,258" fill="#3a93c9"/>
+    <polygon points="312,230 338,240 300,258" fill="#2980b9"/>
+    <polygon points="338,240 356,266 300,258" fill="#1f618d"/>
+    <polygon points="300,258 356,266 320,300" fill="#4a5aa0"/>
+    <polygon points="268,285 300,258 320,300" fill="#2f6fb0"/>
+    <polygon points="268,285 320,300 296,346" fill="#1f618d"/>
+    <polygon points="240,342 268,285 296,346" fill="#24566a"/>
+    <!-- nuca / mandíbula traseira (roxo, lado IA) -->
+    <polygon points="320,300 356,266 366,300" fill="#8e44ad"/>
+    <polygon points="320,300 366,300 344,330" fill="#6e3f94"/>
+    <polygon points="320,300 344,330 296,346" fill="#5e3a7e"/>
+  </g>
+
+  <!-- linha da boca (snarl) + narina -->
+  <polyline points="115,298 198,309 285,319" fill="none" stroke="#06141d" stroke-width="3" stroke-linecap="round"/>
+  <polygon points="128,295 141,292 138,302" fill="#05141c"/>
+
+  <!-- presas -->
+  <g fill="#eafaf5">
+    <polygon points="154,304 166,304 160,322"/>
+    <polygon points="189,308 201,308 195,325"/>
+    <polygon points="224,312 236,312 230,328"/>
+    <polygon points="257,316 269,316 263,330"/>
+    <polygon points="204,335 216,335 210,321"/>
+    <polygon points="239,338 251,338 245,324"/>
+  </g>
+
+  <!-- barbela / espinhos do queixo -->
+  <g fill="#0d5547" stroke="#0a1722" stroke-width="0.8">
+    <polygon points="175,320 196,351 211,329"/>
+    <polygon points="211,330 235,358 249,337"/>
+  </g>
+
+  <!-- olho com pupila fendida (réptil) -->
+  <polygon points="236,264 255,258 268,268 250,278" fill="url(#eyeG)"/>
+  <polygon points="250,261 255,263 253,277 249,275" fill="#06201b"/>
+
+  <!-- traços de circuito (lado Kali) -->
+  <g stroke="#1fb496" stroke-width="1.6" fill="none" opacity="0.85">
+    <path d="M115,298 H70 M96,298 V282 M70,298 V316"/>
+    <path d="M140,310 L104,332 H72"/>
+    <path d="M170,280 L146,260 H96"/>
+  </g>
+  <g fill="#1fb496" opacity="0.9">
+    <rect x="67" y="295" width="6" height="6"/><rect x="93" y="279" width="6" height="6"/>
+    <rect x="69" y="313" width="6" height="6"/><rect x="93" y="257" width="6" height="6"/>
+    <circle cx="72" cy="332" r="3"/>
+  </g>
+
+  <!-- dissolução em rede neural (lado IA) -->
+  <g stroke="#9b59b6" stroke-width="1.4" opacity="0.6">
+    <line x1="381" y1="270" x2="406" y2="252"/><line x1="389" y1="300" x2="414" y2="320"/>
+    <line x1="406" y1="252" x2="438" y2="238"/><line x1="406" y1="252" x2="420" y2="294"/>
+    <line x1="420" y1="294" x2="414" y2="320"/><line x1="438" y1="238" x2="476" y2="256"/>
+    <line x1="420" y1="294" x2="462" y2="288"/><line x1="476" y1="256" x2="462" y2="288"/>
+    <line x1="438" y1="238" x2="470" y2="200"/><line x1="462" y1="288" x2="506" y2="300"/>
+    <line x1="476" y1="256" x2="512" y2="232"/><line x1="470" y1="200" x2="512" y2="232"/>
+    <line x1="414" y1="320" x2="448" y2="352"/><line x1="512" y1="232" x2="524" y2="286"/>
+  </g>
+  <polygon points="392,268 408,262 402,282" fill="#6e3f94" opacity="0.85" stroke="#0a1722" stroke-width="0.8"/>
+  <polygon points="416,300 432,296 424,314" fill="#8e44ad" opacity="0.8" stroke="#0a1722" stroke-width="0.8"/>
+  <g>
+    <circle cx="406" cy="252" r="6" fill="#8e44ad"/><circle cx="438" cy="238" r="6" fill="#2980b9"/>
+    <circle cx="420" cy="294" r="6" fill="#9b59b6"/><circle cx="414" cy="320" r="5" fill="#7d3c9e"/>
+    <circle cx="476" cy="256" r="6" fill="#2980b9"/><circle cx="462" cy="288" r="6" fill="#9b59b6"/>
+    <circle cx="506" cy="300" r="6" fill="#a569bd"/><circle cx="470" cy="200" r="5" fill="#2980b9"/>
+    <circle cx="512" cy="232" r="7" fill="#a569bd"/><circle cx="524" cy="286" r="5" fill="#8e44ad"/>
+    <circle cx="448" cy="352" r="4" fill="#7d3c9e"/>
+  </g>
+  <!-- ======================================================= -->
+
+  <text x="300" y="516" text-anchor="middle" fill="#7fb0a2" font-size="14" letter-spacing="6">GUIA DEFINITIVO DE</text>
+  <text x="300" y="572" text-anchor="middle" fill="#ffffff" font-size="44" font-weight="bold">Kali Linux</text>
+  <text x="300" y="616" text-anchor="middle" fill="#ffffff" font-size="31" font-weight="bold">Ethical Hacking</text>
+  <text x="300" y="656" text-anchor="middle" fill="#1fb496" font-size="28" font-weight="bold">&amp; Defesa de IA</text>
+
+  <line x1="160" y1="686" x2="440" y2="686" stroke="url(#accentD)" stroke-width="2"/>
+  <text x="300" y="720" text-anchor="middle" fill="#cfe0ee" font-size="14">Da mente do invasor à proteção de redes, sistemas e modelos</text>
+  <text x="300" y="742" text-anchor="middle" fill="#7fb0a2" font-size="12.5">Pentest · MLSecOps · Guardrails · NIST AI RMF · EU AI Act</text>
+
+  <text x="300" y="794" text-anchor="middle" fill="#ffffff" font-size="17" font-weight="bold">Damião dos Santos</text>
+  <text x="300" y="816" text-anchor="middle" fill="#7fb0a2" font-size="11.5">Analista de Sistemas · Pós em Segurança da Informação e Engenharia de Software</text>
+</svg>
