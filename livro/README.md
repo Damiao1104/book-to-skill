@@ -92,9 +92,8 @@ Estrutura de apoio:
 | `ferramentas/html_para_pdf.js` | HTML → PDF via Chromium |
 | `ferramentas/build.sh` | Orquestra tudo → `dist/` |
 
-> **Autoria:** o nome do autor está como `[Autor]` na capa
-> (`imagens/capa.svg`) e em `ferramentas/metadados.yaml`. Troque nos dois lugares
-> e rode o build novamente para personalizar.
+> **Autoria:** Damião dos Santos (definido na capa `imagens/capa.svg` e em
+> `ferramentas/metadados.yaml`). Capas alternativas em [`capas/`](capas/).
 
 ---
 
