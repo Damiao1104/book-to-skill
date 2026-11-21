@@ -1,0 +1,166 @@
+/* estilo.css — folha de estilo para a versão PDF (HTML impresso via Chromium) */
+
+@page {
+  size: A4;
+  margin: 22mm 20mm 20mm 20mm;
+}
+
+:root {
+  --tinta: #1f2933;
+  --azul: #1a3a55;
+  --verde: #16a085;
+  --vermelho: #c0392b;
+  --cinza: #5d6d7e;
+  --borda: #d8e0e6;
+  --code-bg: #f5f7f9;
+}
+
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+/* a capa é a página de título; oculta o bloco de título do pandoc */
+#title-block-header, header#title-block-header { display: none; }
+
+body {
+  font-family: "Georgia", "DejaVu Serif", serif;
+  font-size: 10.6pt;
+  line-height: 1.55;
+  color: var(--tinta);
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  text-align: justify;
+}
+
+/* ---------- Capa ---------- */
+.cover {
+  page-break-after: always;
+  text-align: center;
+  margin: 0;
+}
+.cover img { width: 100%; max-height: 240mm; height: auto; display: block; margin: 0 auto; }
+
+/* ---------- Títulos ---------- */
+h1 {
+  font-family: "Helvetica Neue", "DejaVu Sans", sans-serif;
+  color: var(--azul);
+  font-size: 20pt;
+  line-height: 1.2;
+  page-break-before: always;
+  padding-bottom: 6px;
+  border-bottom: 3px solid var(--verde);
+  margin-top: 0;
+}
+/* não quebrar página antes do primeiro H1 (aviso ético) nem da capa */
+.cover + h1 { page-break-before: avoid; }
+
+h2 {
+  font-family: "Helvetica Neue", "DejaVu Sans", sans-serif;
+  color: var(--azul);
+  font-size: 14.5pt;
+  margin-top: 1.4em;
+  border-bottom: 1px solid var(--borda);
+  padding-bottom: 3px;
+}
+h3 {
+  font-family: "Helvetica Neue", "DejaVu Sans", sans-serif;
+  color: var(--vermelho);
+  font-size: 12pt;
+  margin-top: 1.2em;
+}
+h1, h2, h3 { break-after: avoid; }
+
+/* ---------- Sumário (TOC do pandoc) ---------- */
+nav#TOC {
+  page-break-after: always;
+}
+nav#TOC::before {
+  content: "Sumário";
+  display: block;
+  font-family: "Helvetica Neue", "DejaVu Sans", sans-serif;
+  color: var(--azul);
+  font-size: 20pt;
+  border-bottom: 3px solid var(--verde);
+  padding-bottom: 6px;
+  margin-bottom: 14px;
+}
+nav#TOC ul { list-style: none; padding-left: 0; }
+nav#TOC ul ul { padding-left: 18px; font-size: 0.92em; color: var(--cinza); }
+nav#TOC li { margin: 3px 0; }
+nav#TOC a { text-decoration: none; color: var(--tinta); }
+
+/* ---------- Parágrafos e texto ---------- */
+p { margin: 0.5em 0; orphans: 2; widows: 2; }
+strong { color: #11212c; }
+a { color: var(--azul); }
+
+/* ---------- Código ---------- */
+code {
+  font-family: "DejaVu Sans Mono", "Courier New", monospace;
+  font-size: 0.86em;
+  background: var(--code-bg);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--borda);
+  border-left: 4px solid var(--azul);
+  border-radius: 4px;
+  padding: 9px 12px;
+  font-size: 8.9pt;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  page-break-inside: avoid;
+}
+pre code { background: none; padding: 0; font-size: inherit; }
+
+/* ---------- Citações / caixas de destaque ---------- */
+blockquote {
+  margin: 0.9em 0;
+  padding: 8px 14px;
+  background: #fbfdfe;
+  border-left: 4px solid var(--verde);
+  color: #33414d;
+  page-break-inside: avoid;
+  text-align: left;
+}
+blockquote p { margin: 0.3em 0; }
+
+/* ---------- Tabelas ---------- */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+  font-size: 9.2pt;
+  page-break-inside: avoid;
+}
+th, td {
+  border: 1px solid var(--borda);
+  padding: 5px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+thead th {
+  background: var(--azul);
+  color: #fff;
+  font-family: "Helvetica Neue", "DejaVu Sans", sans-serif;
+}
+tbody tr:nth-child(even) { background: #f6f9fb; }
+
+/* ---------- Figuras ---------- */
+figure { margin: 1.1em 0; text-align: center; page-break-inside: avoid; }
+img { max-width: 100%; height: auto; }
+figcaption, .caption {
+  font-size: 8.8pt;
+  color: var(--cinza);
+  font-style: italic;
+  margin-top: 5px;
+  text-align: center;
+}
+
+/* listas */
+ul, ol { margin: 0.5em 0; padding-left: 22px; }
+li { margin: 2px 0; }
+
+hr { border: none; border-top: 1px solid var(--borda); margin: 1.4em 0; }

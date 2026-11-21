@@ -48,6 +48,8 @@ Como o Nmap interpreta a resposta ao SYN:
 | RST | `closed` | Porta fechada, nada escutando |
 | Nenhuma resposta / ICMP *unreachable* | `filtered` | Firewall descartou o pacote |
 
+![Figura 7.1 — Como o `nmap -sS` infere o estado da porta a partir da resposta ao SYN: aberta (SYN-ACK), fechada (RST) ou filtrada (silêncio/ICMP).](imagens/fig-syn-scan.svg)
+
 > 💡 **Dica Técnica:** `-sS` é o padrão de fato para varredura TCP justamente por
 > esse equilíbrio entre velocidade, confiabilidade e discrição. Quando alguém diz
 > "faz um SYN scan", é disto que está falando. Mas saiba interpretar `filtered`:

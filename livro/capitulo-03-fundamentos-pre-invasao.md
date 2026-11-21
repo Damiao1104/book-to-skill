@@ -47,6 +47,8 @@ uma superfície de ataque distinta.
 > aplicação (HTTP, DNS, APIs — e hoje, LLMs). Essa taxonomia organiza o
 > pensamento e aparece em todo *briefing* de segurança sério.
 
+![Figura 3.1 — O modelo OSI em sete camadas, cada uma com um exemplo de ataque correspondente. A pilha TCP/IP de quatro camadas da internet mapeia sobre ele.](imagens/fig-osi.svg)
+
 Na prática, a internet roda sobre uma pilha mais enxuta — o modelo **TCP/IP**,
 de quatro camadas (Aplicação, Transporte, Internet, Acesso à Rede) — que mapeia
 grosso modo sobre o OSI. É esse que você vai usar no dia a dia.
@@ -83,13 +85,7 @@ A camada de transporte tem dois protocolos principais:
 É o ritual de abertura de toda conexão TCP — e a base de praticamente toda
 varredura de portas (Capítulo 7):
 
-```text
-Cliente                         Servidor
-   |------------ SYN ------------->|   "quero conversar" (seq=x)
-   |<-------- SYN-ACK -------------|   "ok, e eu também" (seq=y, ack=x+1)
-   |------------ ACK ------------->|   "combinado" (ack=y+1)
-   |====== conexão estabelecida ===|
-```
+![Figura 3.2 — O three-way handshake do TCP. A varredura SYN (`nmap -sS`) para no segundo passo: o SYN-ACK já prova que a porta está aberta.](imagens/fig-handshake.svg)
 
 Entender esse diálogo é o que permite compreender a varredura **TCP SYN**
 (`nmap -sS`): o atacante envia o SYN, recebe o SYN-ACK (que já prova que a porta

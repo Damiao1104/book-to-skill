@@ -173,6 +173,8 @@ Para fixar o mapa mental da Parte V até aqui:
 | **Data Poisoning** | **Dados de treino** | **Proveniência + curadoria** | **14** |
 | **Model Extraction** | **Saída via API (consultas)** | **Rate limit + SIEM comportamental** | **14** |
 
+![Figura 14.1 — O ciclo de vida do modelo (dados → treino → artefato → inferência → saída), com o ataque e a defesa de cada estágio tratados na Parte V.](imagens/fig-ciclo-ia.svg)
+
 Repare que cada ataque corresponde a um ponto do ciclo de vida do modelo — dados →
 treino → artefato → inferência → saída. A segurança de IA é a proteção de *todo o
 ciclo*, não de um ponto só. Essa visão de ciclo de vida é o que o Capítulo 15

@@ -5,6 +5,8 @@
 > capítulo é o Ponto 1. Parece o passo mais simples — e é justamente por isso que
 > é o mais subestimado. Você não ataca o que não localiza.
 
+![Figura 6.1 — A Técnica dos Três Pontos: IP (reconhecimento) → Portas/serviços (Nmap) → Vulnerabilidade. O esqueleto das Partes III e IV.](imagens/fig-tres-pontos.svg)
+
 ## 6.1 Conhecimento Mínimo Necessário (CMN)
 
 Antes de digitar comandos, estabeleça o seu **Conhecimento Mínimo Necessário**: o

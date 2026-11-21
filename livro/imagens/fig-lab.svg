@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 450" width="760" height="450" font-family="'DejaVu Sans', Arial, sans-serif">
+  <style>
+    .lbl{font-size:13px;fill:#2c3e50}
+    .mono{font-family:'DejaVu Sans Mono',monospace;font-size:12px;fill:#34495e}
+    .tt{font-size:14px;font-weight:bold;fill:#1a3a55}
+  </style>
+  <defs>
+    <marker id="gok" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0 L8 3 L0 6 Z" fill="#16a085"/></marker>
+  </defs>
+  <rect width="760" height="450" fill="#ffffff"/>
+
+  <!-- host -->
+  <rect x="20" y="20" width="720" height="315" rx="12" fill="#f4f7fa" stroke="#2c3e50" stroke-width="2"/>
+  <text x="40" y="46" class="tt">HOST — seu computador físico</text>
+
+  <!-- virtualbox -->
+  <rect x="45" y="58" width="670" height="262" rx="10" fill="#eaf2f8" stroke="#2980b9" stroke-width="1.6"/>
+  <text x="65" y="80" class="lbl" font-weight="bold" fill="#2980b9">VirtualBox</text>
+
+  <!-- kali -->
+  <rect x="85" y="92" width="250" height="150" rx="8" fill="#ffffff" stroke="#16a085" stroke-width="2"/>
+  <rect x="85" y="92" width="250" height="26" rx="8" fill="#16a085"/>
+  <text x="100" y="110" fill="#fff" font-size="13" font-weight="bold">VM Atacante — Kali Linux</text>
+  <text x="100" y="142" class="mono">eth0 (NAT) ── atualizações</text>
+  <text x="100" y="164" class="mono" fill="#c0392b">eth1 (labnet) ── ataque</text>
+  <text x="100" y="196" class="lbl">IP: 192.168.56.10</text>
+  <text x="100" y="220" class="lbl" fill="#16a085">nmap · medusa · metasploit</text>
+
+  <!-- alvo -->
+  <rect x="425" y="92" width="250" height="150" rx="8" fill="#ffffff" stroke="#c0392b" stroke-width="2"/>
+  <rect x="425" y="92" width="250" height="26" rx="8" fill="#c0392b"/>
+  <text x="440" y="110" fill="#fff" font-size="13" font-weight="bold">VM Alvo — Metasploitable 2</text>
+  <text x="440" y="142" class="mono" fill="#c0392b">eth0 (labnet) ── SOMENTE</text>
+  <text x="440" y="164" class="lbl">IP: 192.168.56.20</text>
+  <text x="440" y="196" class="lbl">deliberadamente vulnerável</text>
+  <text x="440" y="220" class="lbl" fill="#c0392b">FTP·SSH·Apache·Samba·MySQL</text>
+
+  <!-- conexão labnet entre as VMs -->
+  <line x1="335" y1="167" x2="425" y2="167" stroke="#8e44ad" stroke-width="3"/>
+  <circle cx="380" cy="167" r="5" fill="#8e44ad"/>
+  <text x="95" y="268" class="lbl" fill="#8e44ad" font-weight="bold">Conexão "labnet": as VMs se enxergam, isolada da internet</text>
+  <rect x="95" y="278" width="470" height="2" fill="#8e44ad" opacity="0.5"/>
+
+  <!-- internet: só o NAT do Kali chega -->
+  <rect x="612" y="252" width="95" height="40" rx="20" fill="#eafaf6" stroke="#16a085" stroke-width="1.6"/>
+  <text x="659" y="277" text-anchor="middle" class="lbl" fill="#16a085" font-weight="bold">🌐 Internet</text>
+  <path d="M150 242 C150 312 470 300 610 282" fill="none" stroke="#16a085" stroke-width="2" stroke-dasharray="6 3" marker-end="url(#gok)"/>
+  <text x="300" y="318" class="lbl" fill="#16a085">só o NAT do Kali chega aqui ✓</text>
+
+  <!-- faixa inferior: regra -->
+  <rect x="20" y="352" width="720" height="78" rx="10" fill="#fdedec" stroke="#c0392b" stroke-width="1.4"/>
+  <text x="380" y="382" text-anchor="middle" class="tt" fill="#c0392b" font-size="15">Regra inegociável</text>
+  <text x="380" y="408" text-anchor="middle" class="lbl" fill="#7b241c">O alvo vulnerável nunca recebe NAT nem Bridge — se ele alcançar a internet, PARE e corrija o modo de rede.</text>
+</svg>

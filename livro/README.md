@@ -1,8 +1,14 @@
 # Guia Definitivo de Kali Linux, Ethical Hacking e Defesa de IA
 
+![Capa do livro](imagens/capa.svg)
+
 > Um livro técnico e didático sobre a mentalidade do invasor, a metodologia de
 > teste de intrusão em redes e sistemas, e a nova fronteira da segurança:
 > proteger modelos matemáticos e sistemas de Inteligência Artificial.
+
+**Formatos prontos:** [PDF](dist/Guia-Kali-EthicalHacking-DefesaIA.pdf) ·
+[EPUB](dist/Guia-Kali-EthicalHacking-DefesaIA.epub) (109 páginas, 15 capítulos,
+3 apêndices e 14 diagramas). Veja [como gerar](#gerar-pdf-e-epub) abaixo.
 
 ---
 
@@ -54,6 +60,41 @@ réu.
 - [Capítulo 13 — Blindagem de Pipelines MLOps e Cadeia de Suprimentos de IA](capitulo-13-mlops-supply-chain.md)
 - [Capítulo 14 — Envenenamento de Dados e Proteção de Propriedade Intelectual](capitulo-14-data-poisoning.md)
 - [Capítulo 15 — Governança, Next-Gen DevSecOps e Ameaças Emergentes](capitulo-15-governanca-devsecops.md)
+
+### Apêndices
+- [Apêndice A — Gabarito Comentado dos Exercícios](apendice-a-gabarito.md)
+- [Apêndice B — Glossário](apendice-b-glossario.md)
+- [Apêndice C — Referência Rápida de Comandos](apendice-c-referencia-comandos.md)
+
+---
+
+## Gerar PDF e EPUB
+
+O livro é escrito em Markdown e compilado para PDF e EPUB por um pipeline
+reprodutível (pandoc + Chromium headless via Playwright). Os diagramas são SVG
+vetoriais (nítidos no PDF e no GitHub); o EPUB usa versões PNG para máxima
+compatibilidade entre leitores.
+
+```bash
+cd livro
+./ferramentas/build.sh      # gera dist/*.pdf e dist/*.epub
+```
+
+Estrutura de apoio:
+
+| Caminho | Papel |
+|---|---|
+| `frontmatter.md`, `capitulo-*.md`, `apendice-*.md` | Conteúdo (fonte única) |
+| `imagens/*.svg` | Diagramas vetoriais (capa + 13 figuras) |
+| `ferramentas/estilo.css` | Folha de estilo da versão PDF |
+| `ferramentas/metadados.yaml` | Título, autor, idioma |
+| `ferramentas/rasterizar.js` | SVG → PNG (para o EPUB) |
+| `ferramentas/html_para_pdf.js` | HTML → PDF via Chromium |
+| `ferramentas/build.sh` | Orquestra tudo → `dist/` |
+
+> **Autoria:** o nome do autor está como `[Autor]` na capa
+> (`imagens/capa.svg`) e em `ferramentas/metadados.yaml`. Troque nos dois lugares
+> e rode o build novamente para personalizar.
 
 ---
 

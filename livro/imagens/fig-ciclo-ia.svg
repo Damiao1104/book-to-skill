@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 340" width="760" height="340" font-family="'DejaVu Sans', Arial, sans-serif">
+  <style>
+    .st{font-size:13px;font-weight:bold;fill:#fff}
+    .atk{font-size:11px;fill:#c0392b}
+    .def{font-size:10.5px;fill:#16a085}
+    .sum{font-size:11.5px;fill:#5d6d7e}
+  </style>
+  <defs>
+    <marker id="ac" markerWidth="12" markerHeight="12" refX="7" refY="4" orient="auto"><path d="M0 0 L9 4 L0 8 Z" fill="#34495e"/></marker>
+  </defs>
+  <rect width="760" height="340" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="bold" fill="#1a3a55">Segurança de IA = proteger o ciclo de vida inteiro</text>
+
+  <!-- dados -->
+  <rect x="20" y="70" width="130" height="50" rx="8" fill="#8e44ad"/>
+  <text x="85" y="100" text-anchor="middle" class="st">Dados</text>
+  <text x="20" y="140" class="atk">Data Poisoning,</text>
+  <text x="20" y="156" class="atk">backdoor (cap.14)</text>
+  <text x="20" y="178" class="def">proveniência,</text>
+  <text x="20" y="192" class="def">hashes/assinaturas</text>
+
+  <line x1="150" y1="95" x2="178" y2="95" stroke="#34495e" stroke-width="2" marker-end="url(#ac)"/>
+  <rect x="182" y="70" width="130" height="50" rx="8" fill="#2980b9"/>
+  <text x="247" y="100" text-anchor="middle" class="st">Treino</text>
+  <text x="182" y="140" class="atk">adversarial,</text>
+  <text x="182" y="156" class="atk">poisoning (12,14)</text>
+  <text x="182" y="178" class="def">treino adversarial,</text>
+  <text x="182" y="192" class="def">curadoria</text>
+
+  <line x1="312" y1="95" x2="340" y2="95" stroke="#34495e" stroke-width="2" marker-end="url(#ac)"/>
+  <rect x="344" y="70" width="130" height="50" rx="8" fill="#1f618d"/>
+  <text x="409" y="100" text-anchor="middle" class="st">Artefato</text>
+  <text x="344" y="140" class="atk">pickle / supply</text>
+  <text x="344" y="156" class="atk">chain (cap.13)</text>
+  <text x="344" y="178" class="def">safetensors,</text>
+  <text x="344" y="192" class="def">integridade, IAM</text>
+
+  <line x1="474" y1="95" x2="502" y2="95" stroke="#34495e" stroke-width="2" marker-end="url(#ac)"/>
+  <rect x="506" y="70" width="130" height="50" rx="8" fill="#16a085"/>
+  <text x="571" y="100" text-anchor="middle" class="st">Inferência</text>
+  <text x="506" y="140" class="atk">prompt injection,</text>
+  <text x="506" y="156" class="atk">evasão (11,12)</text>
+  <text x="506" y="178" class="def">guardrails, HITL,</text>
+  <text x="506" y="192" class="def">menor privilégio</text>
+
+  <line x1="636" y1="95" x2="664" y2="95" stroke="#34495e" stroke-width="2" marker-end="url(#ac)"/>
+  <rect x="640" y="70" width="104" height="50" rx="8" fill="#c0392b"/>
+  <text x="692" y="100" text-anchor="middle" class="st">Saída/API</text>
+  <text x="744" y="140" text-anchor="end" class="atk">extração (cap.14)</text>
+  <text x="744" y="178" text-anchor="end" class="def">rate limit · SIEM</text>
+  <text x="744" y="192" text-anchor="end" class="def">· watermark</text>
+
+  <line x1="20" y1="222" x2="740" y2="222" stroke="#e1e8ee" stroke-width="1"/>
+  <text x="20" y="252" class="sum">Cada estágio tem seu ataque e sua defesa. Proteger um ponto só deixa o ciclo vulnerável — é a tese da Parte V.</text>
+  <text x="20" y="276" class="sum">A governança do capítulo 15 formaliza essa visão de ciclo de vida (NIST AI RMF: GOVERN · MAP · MEASURE · MANAGE).</text>
+</svg>

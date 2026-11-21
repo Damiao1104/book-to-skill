@@ -45,6 +45,8 @@ buscar — e cada uma mapeia para técnicas que você já viu:
 - **Com privacidade protegida** — não vaza dados (Cap. 11, 13).
 - **Justa, com viés gerenciado** — não discrimina indevidamente.
 
+![Figura 15.1 — As quatro funções do NIST AI RMF (GOVERN no centro; MAP, MEASURE e MANAGE ao redor) e as características de IA confiável, com os capítulos onde o livro as trata.](imagens/fig-nist-rmf.svg)
+
 > 💡 **Dica Técnica:** Use as funções do AI RMF como **checklist de maturidade** num
 > projeto de IA, do mesmo jeito que usa o OWASP Top 10 for LLM (Cap. 11) como
 > checklist de vulnerabilidades. OWASP pergunta "onde estão as falhas técnicas?";
@@ -165,15 +167,7 @@ decidir sozinha. No Cap. 11, desenhamos o Human-in-the-Loop para ações de LLM.
 EU AI Act (15.3), a supervisão humana virou lei. No SOC autônomo, a mesma pergunta é
 operacional e crítica:
 
-```text
-Espectro de autonomia na resposta a incidentes:
-
-  totalmente manual  ----------------------------------  totalmente autonomo
-        |                        |                              |
-   analista decide         maquina sugere,              maquina age sozinha
-   tudo (lento,            humano aprova (HITL)          (rapido, arriscado:
-   nao escala)             — alto impacto aqui           falso positivo causa dano)
-```
+![Figura 15.2 — O espectro de autonomia na resposta a incidentes: automatize o reversível e de baixo impacto; exija Human-in-the-Loop para o irreversível e de alto impacto.](imagens/fig-soc-autonomia.svg)
 
 A arquitetura madura **gradua a autonomia pelo impacto e pela reversibilidade**:
 contenção reversível e de baixo risco (bloquear um IP suspeito por 10 minutos) pode

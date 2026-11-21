@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360" width="760" height="360" font-family="'DejaVu Sans', Arial, sans-serif">
+  <style>
+    .host{font-size:15px;font-weight:bold;fill:#1a3a55}
+    .pkt{font-size:13px;font-weight:bold;fill:#fff}
+    .note{font-size:12px;fill:#5d6d7e}
+  </style>
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0 0 L8 3 L0 6 Z" fill="#2c3e50"/>
+    </marker>
+  </defs>
+  <rect width="760" height="360" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="bold" fill="#1a3a55">TCP — o three-way handshake (base da varredura de portas)</text>
+
+  <text x="150" y="68" text-anchor="middle" class="host">Cliente</text>
+  <text x="610" y="68" text-anchor="middle" class="host">Servidor</text>
+  <line x1="150" y1="78" x2="150" y2="330" stroke="#b0bcc6" stroke-width="2"/>
+  <line x1="610" y1="78" x2="610" y2="330" stroke="#b0bcc6" stroke-width="2"/>
+
+  <!-- SYN -->
+  <line x1="150" y1="110" x2="606" y2="140" stroke="#2c3e50" stroke-width="2" marker-end="url(#arr)"/>
+  <rect x="300" y="98" width="110" height="24" rx="4" fill="#2980b9"/>
+  <text x="355" y="115" text-anchor="middle" class="pkt">SYN</text>
+  <text x="310" y="136" class="note">"quero conversar" (seq=x)</text>
+
+  <!-- SYN-ACK -->
+  <line x1="610" y1="170" x2="154" y2="200" stroke="#2c3e50" stroke-width="2" marker-end="url(#arr)"/>
+  <rect x="350" y="160" width="130" height="24" rx="4" fill="#16a085"/>
+  <text x="415" y="177" text-anchor="middle" class="pkt">SYN-ACK</text>
+  <text x="300" y="214" class="note" fill="#16a085">prova que a porta está ABERTA (seq=y, ack=x+1)</text>
+
+  <!-- ACK -->
+  <line x1="150" y1="238" x2="606" y2="268" stroke="#2c3e50" stroke-width="2" marker-end="url(#arr)"/>
+  <rect x="320" y="226" width="110" height="24" rx="4" fill="#2980b9"/>
+  <text x="375" y="243" text-anchor="middle" class="pkt">ACK</text>
+  <text x="330" y="264" class="note">"combinado" (ack=y+1)</text>
+
+  <!-- half-open note -->
+  <rect x="150" y="292" width="460" height="52" rx="8" fill="#fdedec" stroke="#c0392b" stroke-width="1.4"/>
+  <text x="165" y="313" font-size="12.5" fill="#c0392b" font-weight="bold">nmap -sS (half-open scan):</text>
+  <text x="165" y="332" font-size="12" fill="#7b241c">envia SYN, recebe SYN-ACK (já sabe que está aberta) e NÃO completa o handshake → mais rápido e discreto.</text>
+</svg>

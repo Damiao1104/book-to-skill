@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 320" width="760" height="320" font-family="'DejaVu Sans', Arial, sans-serif">
+  <style>
+    .lbl{font-size:13px;fill:#2c3e50}
+    .st{font-size:15px;font-weight:bold;fill:#fff}
+    .mono{font-family:'DejaVu Sans Mono',monospace;font-size:12px;fill:#34495e}
+  </style>
+  <defs>
+    <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0 L8 3 L0 6 Z" fill="#2c3e50"/></marker>
+  </defs>
+  <rect width="760" height="320" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="bold" fill="#1a3a55">nmap -sS — como o estado da porta é inferido da resposta ao SYN</text>
+
+  <!-- origem -->
+  <rect x="30" y="130" width="150" height="56" rx="8" fill="#16a085"/>
+  <text x="105" y="154" text-anchor="middle" class="st">Nmap</text>
+  <text x="105" y="174" text-anchor="middle" fill="#eafaf6" font-size="12">envia SYN →</text>
+
+  <line x1="180" y1="158" x2="270" y2="158" stroke="#2c3e50" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- três respostas -->
+  <!-- aberta -->
+  <rect x="290" y="40" width="200" height="66" rx="8" fill="#eafaf6" stroke="#16a085" stroke-width="2"/>
+  <text x="305" y="64" class="lbl" fill="#16a085" font-weight="bold">Resposta: SYN-ACK</text>
+  <text x="305" y="88" class="mono">→ porta aberta (open)</text>
+
+  <rect x="290" y="126" width="200" height="66" rx="8" fill="#fdedec" stroke="#c0392b" stroke-width="2"/>
+  <text x="305" y="150" class="lbl" fill="#c0392b" font-weight="bold">Resposta: RST</text>
+  <text x="305" y="174" class="mono">→ porta fechada (closed)</text>
+
+  <rect x="290" y="212" width="200" height="66" rx="8" fill="#fef5e7" stroke="#f39c12" stroke-width="2"/>
+  <text x="305" y="236" class="lbl" fill="#b9770e" font-weight="bold">Sem resposta / ICMP</text>
+  <text x="305" y="260" class="mono">→ filtrada (filtered)</text>
+
+  <line x1="250" y1="158" x2="290" y2="73" stroke="#b0bcc6" stroke-width="1.5"/>
+  <line x1="250" y1="158" x2="290" y2="159" stroke="#b0bcc6" stroke-width="1.5"/>
+  <line x1="250" y1="158" x2="290" y2="245" stroke="#b0bcc6" stroke-width="1.5"/>
+
+  <!-- interpretação -->
+  <rect x="520" y="40" width="220" height="238" rx="10" fill="#f4f7fa" stroke="#2c3e50" stroke-width="1.4"/>
+  <text x="535" y="66" class="lbl" font-weight="bold" fill="#1a3a55">Leitura profissional</text>
+  <text x="535" y="96" class="lbl" fill="#16a085" font-weight="bold">open</text>
+  <text x="535" y="114" class="lbl">serviço escutando;</text>
+  <text x="535" y="131" class="lbl">investigar com -sV.</text>
+  <text x="535" y="162" class="lbl" fill="#c0392b" font-weight="bold">closed</text>
+  <text x="535" y="180" class="lbl">nada ali agora.</text>
+  <text x="535" y="212" class="lbl" fill="#b9770e" font-weight="bold">filtered ≠ seguro</text>
+  <text x="535" y="230" class="lbl">há um firewall entre</text>
+  <text x="535" y="247" class="lbl">você e a resposta;</text>
+  <text x="535" y="264" class="lbl">tente -Pn / -sA.</text>
+</svg>

@@ -1,0 +1,5 @@
+# PNGs são gerados a partir dos SVGs pelo build (rasterizar.js) — não versionar.
+imagens/*.png
+
+# Artefatos intermediários do build; os entregáveis finais (PDF/EPUB) são commitados.
+dist/*.html

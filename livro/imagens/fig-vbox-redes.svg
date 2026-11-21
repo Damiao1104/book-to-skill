@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 430" width="760" height="430" font-family="'DejaVu Sans', Arial, sans-serif">
+  <style>
+    .h{font-size:14px;font-weight:bold;fill:#fff}
+    .c{font-size:12.5px;fill:#2c3e50}
+    .ok{fill:#16a085;font-weight:bold}
+    .no{fill:#c0392b;font-weight:bold}
+    .cap{font-size:12px;fill:#5d6d7e}
+  </style>
+  <rect width="760" height="430" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="bold" fill="#1a3a55">Modos de rede do VirtualBox — qual usar no laboratório</text>
+
+  <!-- NAT -->
+  <rect x="20" y="48" width="175" height="330" rx="10" fill="#fbfdff" stroke="#2980b9" stroke-width="1.5"/>
+  <rect x="20" y="48" width="175" height="34" rx="10" fill="#2980b9"/>
+  <text x="107" y="70" text-anchor="middle" class="h">NAT</text>
+  <text x="34" y="110" class="c">Internet: <tspan class="ok">sim</tspan></text>
+  <text x="34" y="138" class="c">VMs entre si: <tspan class="no">não</tspan></text>
+  <text x="34" y="166" class="c">Host vê VMs: <tspan class="no">não</tspan></text>
+  <line x1="34" y1="188" x2="181" y2="188" stroke="#e1e8ee"/>
+  <text x="34" y="214" class="cap">Uso:</text>
+  <text x="34" y="234" class="cap">baixar/atualizar</text>
+  <text x="34" y="252" class="cap">o Kali.</text>
+  <text x="107" y="350" text-anchor="middle" font-size="26">🌐</text>
+
+  <!-- Rede interna -->
+  <rect x="210" y="48" width="175" height="330" rx="10" fill="#e8f6f3" stroke="#16a085" stroke-width="2.4"/>
+  <rect x="210" y="48" width="175" height="34" rx="10" fill="#16a085"/>
+  <text x="297" y="70" text-anchor="middle" class="h">Rede Interna ★</text>
+  <text x="224" y="110" class="c">Internet: <tspan class="no">não</tspan></text>
+  <text x="224" y="138" class="c">VMs entre si: <tspan class="ok">sim</tspan></text>
+  <text x="224" y="166" class="c">Host vê VMs: <tspan class="no">não</tspan></text>
+  <line x1="224" y1="188" x2="371" y2="188" stroke="#cfe8e1"/>
+  <text x="224" y="214" class="cap" fill="#16a085">IDEAL para alvos</text>
+  <text x="224" y="232" class="cap" fill="#16a085">vulneráveis:</text>
+  <text x="224" y="250" class="cap" fill="#16a085">isolamento total.</text>
+  <text x="297" y="350" text-anchor="middle" font-size="26">🔒</text>
+
+  <!-- Host-only -->
+  <rect x="400" y="48" width="175" height="330" rx="10" fill="#fbfdff" stroke="#2980b9" stroke-width="1.5"/>
+  <rect x="400" y="48" width="175" height="34" rx="10" fill="#2980b9"/>
+  <text x="487" y="70" text-anchor="middle" class="h">Host-Only</text>
+  <text x="414" y="110" class="c">Internet: <tspan class="no">não</tspan></text>
+  <text x="414" y="138" class="c">VMs entre si: <tspan class="ok">sim</tspan></text>
+  <text x="414" y="166" class="c">Host vê VMs: <tspan class="ok">sim</tspan></text>
+  <line x1="414" y1="188" x2="561" y2="188" stroke="#e1e8ee"/>
+  <text x="414" y="214" class="cap">Alvos + gerir</text>
+  <text x="414" y="232" class="cap">do host (abrir a</text>
+  <text x="414" y="250" class="cap">web no navegador).</text>
+  <text x="487" y="350" text-anchor="middle" font-size="26">🖥️</text>
+
+  <!-- Bridge -->
+  <rect x="590" y="48" width="150" height="330" rx="10" fill="#fdedec" stroke="#c0392b" stroke-width="2.4"/>
+  <rect x="590" y="48" width="150" height="34" rx="10" fill="#c0392b"/>
+  <text x="665" y="70" text-anchor="middle" class="h">Bridge</text>
+  <text x="604" y="110" class="c">Internet: <tspan class="ok">sim</tspan></text>
+  <text x="604" y="138" class="c">Vira um PC na</text>
+  <text x="604" y="156" class="c">rede real.</text>
+  <line x1="604" y1="178" x2="726" y2="178" stroke="#f5cbc6"/>
+  <text x="604" y="208" class="cap" fill="#c0392b" font-weight="bold">NUNCA para</text>
+  <text x="604" y="226" class="cap" fill="#c0392b" font-weight="bold">alvos</text>
+  <text x="604" y="244" class="cap" fill="#c0392b" font-weight="bold">vulneráveis.</text>
+  <text x="665" y="350" text-anchor="middle" font-size="26">⚠️</text>
+
+  <text x="20" y="410" class="cap">★ Estratégia recomendada: Kali com 2 placas (NAT + labnet); Metasploitable só em Rede Interna.</text>
+</svg>

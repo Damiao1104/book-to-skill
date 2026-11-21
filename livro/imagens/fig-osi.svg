@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 430" width="760" height="430" font-family="'DejaVu Sans', Arial, sans-serif">
+  <style>
+    .n{font-size:13.5px;font-weight:bold;fill:#fff}
+    .f{font-size:12px;fill:#eef3f7}
+    .atk{font-size:12px;fill:#c0392b}
+    .num{font-size:14px;font-weight:bold;fill:#fff}
+  </style>
+  <rect width="760" height="430" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="bold" fill="#1a3a55">Modelo OSI — cada camada é uma superfície de ataque</text>
+  <text x="470" y="52" font-size="12.5" font-weight="bold" fill="#c0392b">Exemplo de ataque</text>
+
+  <!-- rows: y from 60, height 48 each -->
+  <!-- 7 -->
+  <g>
+    <rect x="20" y="60" width="430" height="46" fill="#1a3a55"/>
+    <rect x="20" y="60" width="40" height="46" fill="#102538"/>
+    <text x="40" y="88" text-anchor="middle" class="num">7</text>
+    <text x="72" y="82" class="n">Aplicação</text>
+    <text x="72" y="99" class="f">HTTP, DNS, APIs, LLMs</text>
+    <text x="470" y="88" class="atk">SQLi · XSS · Prompt Injection (cap. 11)</text>
+  </g>
+  <g>
+    <rect x="20" y="108" width="430" height="46" fill="#22496b"/>
+    <rect x="20" y="108" width="40" height="46" fill="#163450"/>
+    <text x="40" y="136" text-anchor="middle" class="num">6</text>
+    <text x="72" y="130" class="n">Apresentação</text>
+    <text x="72" y="147" class="f">formato / criptografia</text>
+    <text x="470" y="136" class="atk">ataques a TLS · desserialização (cap. 13)</text>
+  </g>
+  <g>
+    <rect x="20" y="156" width="430" height="46" fill="#2a5880"/>
+    <rect x="20" y="156" width="40" height="46" fill="#1c3f5d"/>
+    <text x="40" y="184" text-anchor="middle" class="num">5</text>
+    <text x="72" y="178" class="n">Sessão</text>
+    <text x="72" y="195" class="f">controle de diálogo</text>
+    <text x="470" y="184" class="atk">session hijacking</text>
+  </g>
+  <g>
+    <rect x="20" y="204" width="430" height="46" fill="#2980b9"/>
+    <rect x="20" y="204" width="40" height="46" fill="#1f618d"/>
+    <text x="40" y="232" text-anchor="middle" class="num">4</text>
+    <text x="72" y="226" class="n">Transporte</text>
+    <text x="72" y="243" class="f">TCP / UDP</text>
+    <text x="470" y="232" class="atk">SYN flood · varredura de portas (cap. 7)</text>
+  </g>
+  <g>
+    <rect x="20" y="252" width="430" height="46" fill="#3a93c9"/>
+    <rect x="20" y="252" width="40" height="46" fill="#2679a8"/>
+    <text x="40" y="280" text-anchor="middle" class="num">3</text>
+    <text x="72" y="274" class="n">Rede</text>
+    <text x="72" y="291" class="f">endereçamento IP</text>
+    <text x="470" y="280" class="atk">IP spoofing · roteamento malicioso</text>
+  </g>
+  <g>
+    <rect x="20" y="300" width="430" height="46" fill="#5aa8d6"/>
+    <rect x="20" y="300" width="40" height="46" fill="#3d8cbf"/>
+    <text x="40" y="328" text-anchor="middle" class="num">2</text>
+    <text x="72" y="322" class="n">Enlace</text>
+    <text x="72" y="339" class="f">MAC, switches</text>
+    <text x="470" y="328" class="atk">ARP spoofing · MAC flooding</text>
+  </g>
+  <g>
+    <rect x="20" y="348" width="430" height="46" fill="#85c1e3"/>
+    <rect x="20" y="348" width="40" height="46" fill="#5aa8d6"/>
+    <text x="40" y="376" text-anchor="middle" class="num">1</text>
+    <text x="72" y="370" class="n" fill="#123">Física</text>
+    <text x="72" y="387" class="f" fill="#123">sinais elétricos/ópticos</text>
+    <text x="470" y="376" class="atk">grampo físico · interferência</text>
+  </g>
+
+  <text x="20" y="420" font-size="12" fill="#5d6d7e">A internet usa a pilha TCP/IP de 4 camadas, que mapeia grosso modo sobre o OSI.</text>
+</svg>

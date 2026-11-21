@@ -19,12 +19,7 @@ Um **ataque adversarial** explora essa fragilidade: encontra uma perturbação `
 a entrada através da fronteira de decisão, fazendo o modelo classificar "panda" como
 "gibão" com 99% de confiança.
 
-```text
-   imagem X          +     perturbacao δ (minuscula)    =    X'  (adversarial)
-   "panda" 57%             ruido calculado, imperceptivel     "gibao" 99%
-      |                            |                              |
-  entrada legitima        projetada p/ cruzar a fronteira    saida ERRADA e confiante
-```
+![Figura 12.1 — O ataque adversarial: X + δ = X'. A perturbação é ruído calculado (não aleatório) na direção do gradiente, imperceptível ao olho, que cruza a fronteira de decisão.](imagens/fig-fgsm.svg)
 
 O ponto crucial: a perturbação **não é aleatória**. Ruído aleatório raramente engana
 o modelo. A perturbação adversarial é **calculada** — tipicamente na direção do

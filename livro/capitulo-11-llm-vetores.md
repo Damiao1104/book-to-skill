@@ -21,15 +21,7 @@ Tudo chega como *tokens* no mesmo fluxo. O modelo foi treinado para **seguir
 instruções em linguagem natural** — e não consegue garantir *de quem* a instrução
 veio.
 
-```text
-   SQL                              LLM
-   ---                              ---
-   [ codigo fixo ] + [ dado ]       [ instrucao do sistema ] + [ dado do usuario ]
-        |                |                  |                         |
-   separados por         |             MESMO canal de tokens — sem fronteira forte
-   prepared statement    |
-                         fronteira                        (a premissa quebravel)
-```
+![Figura 11.1 — No SQL a fronteira código/dado é garantida pelo prepared statement; no LLM instrução e dado chegam no mesmo fluxo de tokens, sem fronteira forte.](imagens/fig-llm-fronteira.svg)
 
 > 💡 **Dica Técnica:** Essa é a chave de leitura de todo o capítulo. O *Prompt
 > Injection* é, conceitualmente, "o SQL Injection da era dos LLMs" — mas com um
@@ -100,6 +92,8 @@ A injeção indireta é insidiosa porque o usuário **nunca digitou nada malicio
 pode nem ver a instrução plantada. Ela transforma qualquer dado externo que o
 modelo toca em um vetor de ataque — o análogo, na era da IA, do reconhecimento da
 "cadeia de suprimentos" do Capítulo 3.
+
+![Figura 11.2 — Injeção direta (o usuário escreve) vs. indireta (a instrução vem plantada em dados de terceiros). Em agentes, a indireta vira ação no mundo real.](imagens/fig-injecao.svg)
 
 > ⚠️ **Atenção:** Em sistemas **agênticos** (o LLM pode chamar ferramentas: enviar
 > e-mail, executar código, acessar APIs, mexer em arquivos), a injeção indireta

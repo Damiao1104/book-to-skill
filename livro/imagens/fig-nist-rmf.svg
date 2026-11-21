@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 340" width="760" height="340" font-family="'DejaVu Sans', Arial, sans-serif">
+  <style>.fn{font-size:16px;font-weight:bold;fill:#fff}.q{font-size:11.5px;fill:#2c3e50}.cap{font-size:12px;fill:#5d6d7e}</style>
+  <rect width="760" height="340" fill="#ffffff"/>
+  <text x="20" y="28" font-size="16" font-weight="bold" fill="#1a3a55">NIST AI RMF — as quatro funções da gestão de risco de IA</text>
+
+  <!-- GOVERN centro -->
+  <circle cx="265" cy="190" r="72" fill="#1a3a55"/>
+  <text x="265" y="186" text-anchor="middle" class="fn">GOVERN</text>
+  <text x="265" y="208" text-anchor="middle" fill="#9fc0dc" font-size="11">cultura, papéis,</text>
+  <text x="265" y="223" text-anchor="middle" fill="#9fc0dc" font-size="11">políticas</text>
+
+  <!-- três satélites -->
+  <g>
+    <circle cx="265" cy="70" r="46" fill="#2980b9"/>
+    <text x="265" y="68" text-anchor="middle" class="fn" font-size="14">MAP</text>
+    <text x="265" y="86" text-anchor="middle" fill="#d6e9f7" font-size="10">contexto e riscos</text>
+  </g>
+  <g>
+    <circle cx="150" cy="285" r="46" fill="#16a085"/>
+    <text x="150" y="283" text-anchor="middle" class="fn" font-size="13">MEASURE</text>
+    <text x="150" y="301" text-anchor="middle" fill="#d6f2ea" font-size="10">medir e avaliar</text>
+  </g>
+  <g>
+    <circle cx="380" cy="285" r="46" fill="#c0392b"/>
+    <text x="380" y="283" text-anchor="middle" class="fn" font-size="13">MANAGE</text>
+    <text x="380" y="301" text-anchor="middle" fill="#fbe0dc" font-size="9.5">tratar/monitorar</text>
+  </g>
+  <g stroke="#b0bcc6" stroke-width="2">
+    <line x1="265" y1="118" x2="265" y2="116"/>
+    <line x1="221" y1="226" x2="178" y2="252"/>
+    <line x1="309" y1="226" x2="352" y2="252"/>
+  </g>
+
+  <!-- características confiáveis -->
+  <rect x="470" y="56" width="280" height="262" rx="10" fill="#f4f7fa" stroke="#2c3e50" stroke-width="1.3"/>
+  <text x="488" y="82" font-size="13" font-weight="bold" fill="#1a3a55">IA confiável (e onde o livro trata)</text>
+  <text x="488" y="110" class="q">• Válida e confiável — robustez (cap.12)</text>
+  <text x="488" y="134" class="q">• Segura e resiliente — toda a Parte V</text>
+  <text x="488" y="158" class="q">• Transparente e prestável de contas</text>
+  <text x="488" y="182" class="q">• Explicável e interpretável</text>
+  <text x="488" y="206" class="q">• Privacidade protegida (cap.11,13)</text>
+  <text x="488" y="230" class="q">• Justa, com viés gerenciado (cap.14)</text>
+  <line x1="488" y1="246" x2="732" y2="246" stroke="#e1e8ee"/>
+  <text x="488" y="270" class="cap">Use as funções como checklist de</text>
+  <text x="488" y="288" class="cap">maturidade — assim como o OWASP Top 10</text>
+  <text x="488" y="306" class="cap">for LLM é o checklist de falhas (cap.11).</text>
+</svg>

@@ -30,20 +30,7 @@ O laboratório mínimo tem dois papéis:
   **Metasploitable 2**, um Linux cheio de falhas conhecidas, feito para ser
   atacado.
 
-```text
-            HOST (seu computador fisico)
-   +-----------------------------------------------+
-   |                                               |
-   |   VirtualBox                                  |
-   |   +-----------------+   +------------------+   |
-   |   |  Kali (atacante)|   | Metasploitable 2 |   |
-   |   |  192.168.56.10  |   |  192.168.56.20   |   |
-   |   +--------+--------+   +---------+--------+   |
-   |            |                      |            |
-   |     ==== Rede interna isolada: "labnet" ====   |
-   |            (SEM acesso a internet)             |
-   +-----------------------------------------------+
-```
+![Figura 5.1 — Arquitetura do laboratório isolado: Kali (atacante) e Metasploitable (alvo) numa rede interna "labnet" sem acesso à internet.](imagens/fig-lab.svg)
 
 > ⚠️ **Atenção:** O ponto inegociável é a **rede isolada**. O Metasploitable é
 > deliberadamente vulnerável; se ele tocar a internet, será comprometido por
@@ -62,6 +49,8 @@ iniciantes. Entenda cada um:
 | **Rede Interna** | **Não** | **Sim** | Não | **Alvos vulneráveis (ideal)** |
 | **Host-Only** | Não | Sim | **Sim** | Alvos + acesso do host p/ gerir |
 | **Bridge** | Sim (vira "um PC" na rede real) | Sim | Sim | ⚠️ **NUNCA** para alvos vulneráveis |
+
+![Figura 5.2 — Os quatro modos de rede do VirtualBox. Alvos vulneráveis vão em Rede Interna; Bridge nunca.](imagens/fig-vbox-redes.svg)
 
 A estratégia recomendada e mais segura:
 

