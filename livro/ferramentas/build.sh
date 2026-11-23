@@ -13,6 +13,9 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 mkdir -p "$DIST"
 
+# Capa oficial do livro (imagem fornecida pelo autor; JPG para compatibilidade com EPUB)
+CAPA="$RAIZ/capas/capa-oficial.jpg"
+
 # Ordem canônica do livro (front matter -> capítulos -> apêndices)
 CAPS=(
   frontmatter.md
@@ -50,12 +53,13 @@ pandoc "$TMP/livro.md" \
   --standalone --embed-resources \
   --toc --toc-depth=2 \
   --css="$FERR/estilo.css" \
-  --include-before-body="$FERR/capa.html" \
   --resource-path="$RAIZ" \
   -o "$TMP/livro.html"
 
-echo "[3/4] Imprimindo o PDF via Chromium..."
-node "$FERR/html_para_pdf.js" "$TMP/livro.html" "$DIST/Guia-Kali-EthicalHacking-DefesaIA.pdf"
+echo "[3/4] Imprimindo o PDF via Chromium (capa sangrada + miolo)..."
+node "$FERR/capa_para_pdf.js" "$CAPA" "$TMP/capa.pdf" >/dev/null
+node "$FERR/html_para_pdf.js" "$TMP/livro.html" "$TMP/miolo.pdf"
+pdfunite "$TMP/capa.pdf" "$TMP/miolo.pdf" "$DIST/Guia-Kali-EthicalHacking-DefesaIA.pdf"
 
 echo "[4/4] Gerando o EPUB (figuras em PNG para máxima compatibilidade)..."
 # variante com referências de imagem em .png
@@ -64,7 +68,7 @@ pandoc "$TMP/livro_epub.md" \
   --metadata-file="$FERR/metadados.yaml" \
   --from=gfm --to=epub3 \
   --toc --toc-depth=2 \
-  --epub-cover-image="$RAIZ/imagens/capa.png" \
+  --epub-cover-image="$CAPA" \
   --resource-path="$RAIZ" \
   -o "$DIST/Guia-Kali-EthicalHacking-DefesaIA.epub"
 

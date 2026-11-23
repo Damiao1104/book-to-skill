@@ -1,6 +1,6 @@
 # Guia Definitivo de Kali Linux, Ethical Hacking e Defesa de IA
 
-![Capa do livro](imagens/capa.svg)
+![Capa do livro](capas/capa-oficial.jpg)
 
 > Um livro técnico e didático sobre a mentalidade do invasor, a metodologia de
 > teste de intrusão em redes e sistemas, e a nova fronteira da segurança:
@@ -92,8 +92,8 @@ Estrutura de apoio:
 | `ferramentas/html_para_pdf.js` | HTML → PDF via Chromium |
 | `ferramentas/build.sh` | Orquestra tudo → `dist/` |
 
-> **Autoria:** Damião dos Santos (definido na capa `imagens/capa.svg` e em
-> `ferramentas/metadados.yaml`). Capas alternativas em [`capas/`](capas/).
+> **Autoria:** Damião dos Santos. Capa oficial: `capas/capa-oficial.jpg` (fornecida pelo autor); metadados em
+> `ferramentas/metadados.yaml`. Capas alternativas em [`capas/`](capas/).
 
 ---
 
