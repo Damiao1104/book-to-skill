@@ -15,7 +15,7 @@ const { chromium } = require('playwright');
   const rodape = `
     <div style="font-family:'DejaVu Sans',Arial,sans-serif;font-size:7.5px;color:#8a99a6;
                 width:100%;padding:0 20mm;display:flex;justify-content:space-between;">
-      <span>Guia Definitivo de Kali Linux, Ethical Hacking e Defesa de IA</span>
+      <span>Manual do Hacker — DevSecOps &amp; IA</span>
       <span class="pageNumber"></span>
     </div>`;
   const cabecalho = `<div></div>`; // sem cabeçalho (capa e títulos já marcam)

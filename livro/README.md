@@ -1,4 +1,6 @@
-# Guia Definitivo de Kali Linux, Ethical Hacking e Defesa de IA
+# Manual do Hacker — DevSecOps & IA
+
+> Kali Linux, Ethical Hacking e Defesa de Inteligência Artificial
 
 ![Capa do livro](capas/capa-oficial.jpg)
 
@@ -6,9 +8,9 @@
 > teste de intrusão em redes e sistemas, e a nova fronteira da segurança:
 > proteger modelos matemáticos e sistemas de Inteligência Artificial.
 
-**Formatos prontos:** [PDF](dist/Guia-Kali-EthicalHacking-DefesaIA.pdf) ·
-[EPUB](dist/Guia-Kali-EthicalHacking-DefesaIA.epub) (109 páginas, 15 capítulos,
-3 apêndices e 14 diagramas). Veja [como gerar](#gerar-pdf-e-epub) abaixo.
+**Formatos prontos:** [PDF](dist/Manual-do-Hacker-DevSecOps-e-IA.pdf) ·
+[EPUB](dist/Manual-do-Hacker-DevSecOps-e-IA.epub) — 15 capítulos, 3 apêndices,
+prefácio, referências e 14 diagramas. Veja [como gerar](#gerar-pdf-e-epub) abaixo.
 
 ---
 
@@ -66,6 +68,11 @@ réu.
 - [Apêndice B — Glossário](apendice-b-glossario.md)
 - [Apêndice C — Referência Rápida de Comandos](apendice-c-referencia-comandos.md)
 
+### Pré e pós-textuais
+- [Prefácio](prefacio.md)
+- [Referências e Leituras Recomendadas](referencias.md)
+- [Sobre o Autor](sobre-o-autor.md)
+
 ---
 
 ## Gerar PDF e EPUB
@@ -84,16 +91,18 @@ Estrutura de apoio:
 
 | Caminho | Papel |
 |---|---|
-| `frontmatter.md`, `capitulo-*.md`, `apendice-*.md` | Conteúdo (fonte única) |
-| `imagens/*.svg` | Diagramas vetoriais (capa + 13 figuras) |
+| `prefacio.md`, `frontmatter.md`, `capitulo-*.md`, `apendice-*.md`, `referencias.md`, `sobre-o-autor.md` | Conteúdo (fonte única) |
+| `imagens/*.svg` | Diagramas vetoriais (13 figuras) |
+| `capas/capa-oficial.*` | Capa do livro |
 | `ferramentas/estilo.css` | Folha de estilo da versão PDF |
+| `ferramentas/creditos.html` | Página de créditos (antes do sumário) |
 | `ferramentas/metadados.yaml` | Título, autor, idioma |
 | `ferramentas/rasterizar.js` | SVG → PNG (para o EPUB) |
-| `ferramentas/html_para_pdf.js` | HTML → PDF via Chromium |
+| `ferramentas/capa_para_pdf.js` · `html_para_pdf.js` | Capa e miolo → PDF (Chromium) |
 | `ferramentas/build.sh` | Orquestra tudo → `dist/` |
 
-> **Autoria:** Damião dos Santos. Capa oficial: `capas/capa-oficial.jpg` (fornecida pelo autor); metadados em
-> `ferramentas/metadados.yaml`. Capas alternativas em [`capas/`](capas/).
+> **Autoria:** Damião dos Santos. Capa oficial em `capas/capa-oficial.jpg`
+> (fornecida pelo autor); metadados em `ferramentas/metadados.yaml`.
 
 ---
 

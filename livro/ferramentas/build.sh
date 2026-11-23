@@ -16,8 +16,9 @@ mkdir -p "$DIST"
 # Capa oficial do livro (imagem fornecida pelo autor; JPG para compatibilidade com EPUB)
 CAPA="$RAIZ/capas/capa-oficial.jpg"
 
-# Ordem canônica do livro (front matter -> capítulos -> apêndices)
+# Ordem canônica do livro (pré-textual -> capítulos -> apêndices -> pós-textual)
 CAPS=(
+  prefacio.md
   frontmatter.md
   capitulo-01-cultura-hacker.md
   capitulo-02-legislacao-etica.md
@@ -37,7 +38,11 @@ CAPS=(
   apendice-a-gabarito.md
   apendice-b-glossario.md
   apendice-c-referencia-comandos.md
+  referencias.md
+  sobre-o-autor.md
 )
+
+SAIDA="Manual-do-Hacker-DevSecOps-e-IA"
 
 echo "[1/4] Garantindo PNGs das figuras (para o EPUB)..."
 node "$FERR/rasterizar.js" >/dev/null
@@ -53,13 +58,14 @@ pandoc "$TMP/livro.md" \
   --standalone --embed-resources \
   --toc --toc-depth=2 \
   --css="$FERR/estilo.css" \
+  --include-before-body="$FERR/creditos.html" \
   --resource-path="$RAIZ" \
   -o "$TMP/livro.html"
 
 echo "[3/4] Imprimindo o PDF via Chromium (capa sangrada + miolo)..."
 node "$FERR/capa_para_pdf.js" "$CAPA" "$TMP/capa.pdf" >/dev/null
 node "$FERR/html_para_pdf.js" "$TMP/livro.html" "$TMP/miolo.pdf"
-pdfunite "$TMP/capa.pdf" "$TMP/miolo.pdf" "$DIST/Guia-Kali-EthicalHacking-DefesaIA.pdf"
+pdfunite "$TMP/capa.pdf" "$TMP/miolo.pdf" "$DIST/$SAIDA.pdf"
 
 echo "[4/4] Gerando o EPUB (figuras em PNG para máxima compatibilidade)..."
 # variante com referências de imagem em .png
@@ -70,7 +76,7 @@ pandoc "$TMP/livro_epub.md" \
   --toc --toc-depth=2 \
   --epub-cover-image="$CAPA" \
   --resource-path="$RAIZ" \
-  -o "$DIST/Guia-Kali-EthicalHacking-DefesaIA.epub"
+  -o "$DIST/$SAIDA.epub"
 
 echo "----------------------------------------------------------------"
 echo "Pronto. Arquivos em: $DIST"
